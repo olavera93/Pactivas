@@ -3,18 +3,22 @@ import { Head, useForm, router } from '@inertiajs/react';
 import React, { useState } from 'react';
 
 const ESTADO_CONFIG = {
-    pendiente:      { label: 'Pendiente',      color: '#f59e0b', bg: '#fffbeb', dot: '🟡' },
-    confirmado:     { label: 'Confirmado',     color: '#22c55e', bg: '#f0fdf4', dot: '🟢' },
-    no_confirmado:  { label: 'No Confirmado',  color: '#ef4444', bg: '#fef2f2', dot: '🔴' },
+    pendiente:      { label: 'Pendiente',      color: '#f59e0b', bg: '#fffbeb', dot: '🟡', icon: '⏳' },
+    confirmado:     { label: 'Confirmado',     color: '#22c55e', bg: '#f0fdf4', dot: '🟢', icon: '✅' },
+    no_confirmado:  { label: 'No Confirmado',  color: '#ef4444', bg: '#fef2f2', dot: '🔴', icon: '❌' },
 };
 
-
-function KpiCard({ label, value, sub, color = '#00a3e0' }) {
+function KpiCard({ label, value, sub, color = '#00a2e1', icon }) {
     return (
-        <div className="bg-white rounded-2xl p-5 border border-[#edf2f7] shadow-sm">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-2">{label}</div>
-            <div className="text-[36px] font-black leading-none" style={{ color }}>{value}</div>
-            {sub && <div className="text-[11px] text-[#94a3b8] mt-1">{sub}</div>}
+        <div className="premium-card p-4 flex items-center justify-between group overflow-hidden relative">
+            <div className="relative z-10">
+                <div className="text-[9px] font-black uppercase tracking-[0.15em] text-[#94a3b8] mb-0.5">{label}</div>
+                <div className="text-2xl font-black tracking-tight" style={{ color }}>{value}</div>
+                {sub && <div className="text-[10px] text-[#64748b] font-medium mt-0.5 uppercase tracking-tight opacity-70">{sub}</div>}
+            </div>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10" style={{ background: `${color}10`, color }}>
+                {icon}
+            </div>
         </div>
     );
 }
@@ -24,15 +28,15 @@ function BarChart({ data, colorFn }) {
     return (
         <div className="space-y-3">
             {Object.entries(data).map(([key, val]) => (
-                <div key={key}>
-                    <div className="flex justify-between text-[12px] mb-1">
-                        <span className="font-bold capitalize text-[#1a202c]">{key.replace('_', ' ')}</span>
-                        <span className="font-black text-[#64748b]">{val}</span>
+                <div key={key} className="group">
+                    <div className="flex justify-between items-end text-[11px] mb-1.5">
+                        <span className="font-bold capitalize text-[#1a202c] group-hover:text-[#00a2e1] transition-colors">{key.replace('_', ' ')}</span>
+                        <span className="font-black text-[#64748b] bg-gray-50 px-1.5 py-0.5 rounded text-[9px]">{val}</span>
                     </div>
                     <div className="h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
                         <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${(val / max) * 100}%`, background: colorFn ? colorFn(key) : '#00a3e0' }}
+                            className="h-full rounded-full transition-all duration-1000 ease-out"
+                            style={{ width: `${(val / max) * 100}%`, background: colorFn ? colorFn(key) : 'linear-gradient(90deg, #00a2e1, #0084b9)' }}
                         />
                     </div>
                 </div>
@@ -46,82 +50,70 @@ function ReporteItem({ r, onGestionar }) {
     const cfg = ESTADO_CONFIG[r.estado] || ESTADO_CONFIG.pendiente;
 
     return (
-        <div className="bg-white rounded-2xl border border-[#edf2f7] shadow-sm overflow-hidden">
-            {/* Cabecera clicable */}
+        <div className="bg-white border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
             <button
-                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#f5f9ff] transition-colors"
+                className="w-full flex items-center justify-between px-4 py-3.5 text-left"
                 onClick={() => setOpen(o => !o)}
             >
                 <div className="flex items-center gap-4 min-w-0">
-                    <span className="text-[11px] font-mono text-[#94a3b8] shrink-0">#{r.id}</span>
-                    {r.no_orden && (
-                        <span className="text-[11px] font-mono bg-[#f1f5f9] text-[#64748b] px-2 py-0.5 rounded shrink-0">{r.no_orden}</span>
-                    )}
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shadow-sm border border-white`} style={{ background: cfg.bg, color: cfg.color }}>
+                        {cfg.icon}
+                    </div>
                     <div className="min-w-0">
-                        <span className="font-bold text-[13px] text-[#1a202c] block truncate">{r.nombre_responsable || '—'}</span>
-                        <span className="text-[11px] text-[#94a3b8]">{r.area_responsable || r.area} · {new Date(r.created_at).toLocaleDateString('es-CO')}</span>
+                        <span className="font-black text-[13px] text-gray-900 block truncate leading-tight mb-0.5">{r.nombre_responsable || '—'}</span>
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-[#94a3b8] uppercase tracking-tight">
+                            <span>{r.area_responsable || r.area}</span>
+                            <span className="w-0.5 h-0.5 rounded-full bg-gray-200" />
+                            <span>{new Date(r.created_at).toLocaleDateString('es-CO')}</span>
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0 ml-4">
-                    <span className="text-[10px] font-bold bg-[#e6f6fd] text-[#00a3e0] px-2 py-1 rounded-lg hidden sm:inline">{r.categoria}</span>
-                    <span className="text-[10px] font-bold px-2 py-1 rounded-lg"
-                        style={{ color: cfg.color, background: cfg.bg }}>
-                        {cfg.label}
-                    </span>
-                    <svg className={`w-4 h-4 text-[#94a3b8] transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <span className="text-[8px] font-black uppercase tracking-widest bg-gray-100 text-gray-400 px-2.5 py-1.5 rounded-md hidden sm:inline">{r.categoria}</span>
+                    <svg className={`w-4 h-4 text-[#cbd5e1] transition-transform duration-500 ${open ? 'rotate-180 text-[#00a3e0]' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                     </svg>
                 </div>
             </button>
 
-            {/* Contenido desplegable */}
             {open && (
-                <div className="px-5 pb-5 border-t border-[#f1f5f9] pt-4 space-y-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[12px]">
-                        <div>
-                            <div className="text-[10px] font-bold uppercase text-[#94a3b8] mb-1">Reportado por</div>
-                            <div className="font-bold text-[#1a202c]">{r.nombre_empleado}</div>
-                        </div>
-                        <div>
-                            <div className="text-[10px] font-bold uppercase text-[#94a3b8] mb-1">Responsable</div>
-                            <div className="font-bold text-[#1a202c]">{r.nombre_responsable || '—'}</div>
-                        </div>
-                        <div>
-                            <div className="text-[10px] font-bold uppercase text-[#94a3b8] mb-1">Fecha del caso</div>
-                            <div className="font-bold text-[#1a202c]">{r.fecha_caso || '—'}</div>
-                        </div>
-                        <div>
-                            <div className="text-[10px] font-bold uppercase text-[#94a3b8] mb-1">Área</div>
-                            <div className="font-bold text-[#1a202c]">{r.area_responsable || r.area}</div>
-                        </div>
-                        <div>
-                            <div className="text-[10px] font-bold uppercase text-[#94a3b8] mb-1">Quien Socializa</div>
-                            <div className="font-bold text-[#1a202c]">{r.nombre_socializador || '—'}</div>
-                        </div>
-                        <div>
-                            <div className="text-[10px] font-bold uppercase text-[#94a3b8] mb-1">Colaborador que Recibe</div>
-                            <div className="font-bold text-[#1a202c]">{r.nombre_receptor || '—'}</div>
-                        </div>
+                <div className="px-12 pb-5 pt-1 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 py-3 border-y border-gray-50">
+                        {[
+                            { label: 'Reportado por', val: r.nombre_empleado },
+                            { label: 'Responsable', val: r.nombre_responsable || '—' },
+                            { label: 'Fecha caso', val: r.fecha_caso || '—' },
+                            { label: 'Área', val: r.area_responsable || r.area },
+                        ].map(item => (
+                            <div key={item.label}>
+                                <div className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{item.label}</div>
+                                <div className="font-bold text-gray-800 text-[11px]">{item.val}</div>
+                            </div>
+                        ))}
                     </div>
 
-                    <div>
-                        <div className="text-[10px] font-bold uppercase text-[#94a3b8] mb-1">Descripción</div>
-                        <p className="text-[13px] text-[#64748b] leading-relaxed bg-[#f8fafc] rounded-xl p-3">{r.descripcion}</p>
+                    <div className="space-y-4">
+                        <div>
+                            <div className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Descripción completa de la oportunidad</div>
+                            <p className="text-[14px] text-[#334155] font-medium leading-relaxed bg-gray-50/50 rounded-xl p-4 border border-gray-100 italic w-full">
+                                "{r.descripcion}"
+                            </p>
+                        </div>
+
+                        {r.observacion_admin && (
+                            <div className="animate-fade-in">
+                                <div className="text-[8px] font-black uppercase tracking-widest text-[#f59e0b] mb-1.5">Respuesta Administrativa</div>
+                                <p className="text-[12px] text-[#92400e] leading-relaxed bg-[#fffbeb]/50 rounded-xl p-3 border border-[#fde68a]">{r.observacion_admin}</p>
+                            </div>
+                        )}
                     </div>
 
-                    {r.observacion_admin && (
-                        <div>
-                            <div className="text-[10px] font-bold uppercase text-[#94a3b8] mb-1">Observación Admin</div>
-                            <p className="text-[13px] text-[#64748b] leading-relaxed bg-[#fffbeb] rounded-xl p-3">{r.observacion_admin}</p>
-                        </div>
-                    )}
-
-                    <div className="flex justify-end">
+                    <div className="flex justify-end pt-1">
                         <button
                             onClick={() => onGestionar(r)}
-                            className="bg-[#00a3e0] text-white text-[12px] font-bold px-4 py-2 rounded-xl hover:bg-[#007db0] transition-colors"
+                            className="text-[10px] font-black text-[#00a3e0] uppercase tracking-widest hover:underline flex items-center gap-1.5"
                         >
-                            Gestionar
+                            <span>⚙️</span> Gestionar Reporte
                         </button>
                     </div>
                 </div>
@@ -134,6 +126,7 @@ export default function Indicadores({ auth, stats }) {
     const [tab, setTab] = useState('indicadores');
     const [modalData, setModalData] = useState(null);
     const [filtros, setFiltros] = useState({ estado: '', area: '', fecha_inicio: '', fecha_fin: '', nombre_responsable: '' });
+    const [fechaInd, setFechaInd] = useState({ inicio: '', fin: '' });
 
     const estadoForm = useForm({ estado: '', observacion_admin: '' });
 
@@ -167,314 +160,313 @@ export default function Indicadores({ auth, stats }) {
         return true;
     });
 
-    const por_estado    = stats.por_estado    || {};
-    const por_categoria = stats.por_categoria || {};
-    const por_area      = stats.por_area      || {};
+    const registrosInd = (stats.registros || []).filter(r => {
+        if (fechaInd.inicio && r.created_at.slice(0, 10) < fechaInd.inicio) return false;
+        if (fechaInd.fin    && r.created_at.slice(0, 10) > fechaInd.fin)    return false;
+        return true;
+    });
 
-    const tabs = [
-        { key: 'indicadores', label: 'Indicadores' },
-        { key: 'reportes',    label: 'Reportes' },
-        { key: 'analisis',    label: 'Análisis' },
-    ];
+    const hayFiltroInd = fechaInd.inicio || fechaInd.fin;
+
+    const agrupar = (arr, key) => arr.reduce((acc, r) => {
+        const k = r[key] || 'Sin definir';
+        acc[k] = (acc[k] || 0) + 1;
+        return acc;
+    }, {});
+
+    const por_estado    = hayFiltroInd ? agrupar(registrosInd, 'estado')    : (stats.por_estado    || {});
+    const por_categoria = hayFiltroInd ? agrupar(registrosInd, 'categoria') : (stats.por_categoria || {});
+    const por_area      = hayFiltroInd ? agrupar(registrosInd, 'area')      : (stats.por_area      || {});
+    const totalInd      = hayFiltroInd ? registrosInd.length                : (stats.total         || 0);
+    const hoyInd        = hayFiltroInd
+        ? registrosInd.filter(r => r.created_at.slice(0, 10) === new Date().toISOString().slice(0, 10)).length
+        : (stats.hoy || 0);
 
     return (
         <AuthenticatedLayout
             user={auth.user}
             header={
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-gray-800">
-                            Indicadores de <span className="text-[#00a3e0]">Mejora</span>
-                        </h2>
-                        <p className="text-sm text-gray-500">Gestión de oportunidades de mejora SST</p>
+                        <h2 className="text-2xl font-bold tracking-tight text-gray-800">Indicadores de <span className="text-[#00a2e1]">Mejora</span></h2>
+                        <p className="text-sm text-gray-500">Métricas y reportes detallados del sistema</p>
                     </div>
-                    <a
-                        href="/oportunidades"
-                        className="text-xs font-bold text-[#00a3e0] border border-[#00a3e0] px-4 py-2 rounded-xl hover:bg-[#00a3e0] hover:text-white transition-colors"
-                        target="_blank"
-                    >
-                        Ver Landing
-                    </a>
+                   
+                    <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+                        {[
+                            { key: 'indicadores', label: 'Resumen', icon: '📊' },
+                            { key: 'reportes',    label: 'Listado', icon: '📋' },
+                        ].map(t => (
+                            <button
+                                key={t.key}
+                                onClick={() => setTab(t.key)}
+                                className={`px-4 py-2 rounded-lg text-[12px] font-black tracking-tight transition-all flex items-center gap-1.5 ${tab === t.key ? 'bg-white text-[#00a2e1] shadow-sm' : 'text-[#64748b] hover:text-[#1a202c]'}`}
+                            >
+                                <span>{t.icon}</span>
+                                {t.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             }
         >
             <Head title="Indicadores de Mejora" />
 
-            <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+            {/* ===== TAB: INDICADORES ===== */}
+            {tab === 'indicadores' && (
+                <div className="space-y-6 animate-fade-in-up">
 
-                {/* Tabs */}
-                <div className="flex gap-1 bg-[#f1f5f9] rounded-xl p-1 mb-8 w-fit">
-                    {tabs.map(t => (
-                        <button
-                            key={t.key}
-                            onClick={() => setTab(t.key)}
-                            className={`px-5 py-2 rounded-lg text-[13px] font-bold transition-all ${tab === t.key ? 'bg-white text-[#00a3e0] shadow-sm' : 'text-[#64748b] hover:text-[#1a202c]'}`}
-                        >
-                            {t.label}
-                        </button>
-                    ))}
-                </div>
-
-                {/* ===== TAB: INDICADORES ===== */}
-                {tab === 'indicadores' && (
-                    <div className="space-y-8">
-                        {/* KPIs principales */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            <KpiCard label="Total Reportes" value={stats.total} sub="Desde el inicio" color="#00a3e0" />
-                            <KpiCard label="Hoy" value={stats.hoy} sub="Nuevos hoy" color="#00a2e1" />
-                            <KpiCard label="Pendientes" value={por_estado.pendiente || 0} sub="Sin gestionar" color="#f59e0b" />
-                            <KpiCard label="Cerradas" value={por_estado.cerrada || 0} sub="Gestionadas" color="#22c55e" />
+                    {/* Rango de fecha compacto */}
+                    <div className="premium-card p-4 flex flex-wrap items-end gap-4 bg-white">
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] px-1">Fecha Inicio</label>
+                            <input
+                                type="date"
+                                className="premium-input !py-1.5 !px-3 shadow-none border-[#f1f5f9]"
+                                value={fechaInd.inicio}
+                                onChange={e => setFechaInd(p => ({ ...p, inicio: e.target.value }))}
+                            />
                         </div>
-
-                        {/* Gráficas */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div className="bg-white rounded-2xl p-6 border border-[#edf2f7] shadow-sm">
-                                <h3 className="text-[13px] font-black uppercase tracking-widest text-[#64748b] mb-5">Por Estado</h3>
-                                <BarChart
-                                    data={por_estado}
-                                    colorFn={k => ESTADO_CONFIG[k]?.color || '#00a3e0'}
-                                />
-                            </div>
-                            <div className="bg-white rounded-2xl p-6 border border-[#edf2f7] shadow-sm">
-                                <h3 className="text-[13px] font-black uppercase tracking-widest text-[#64748b] mb-5">Por Categoría</h3>
-                                <BarChart data={por_categoria} />
-                            </div>
-                            <div className="bg-white rounded-2xl p-6 border border-[#edf2f7] shadow-sm">
-                                <h3 className="text-[13px] font-black uppercase tracking-widest text-[#64748b] mb-5">Por Área</h3>
-                                <BarChart data={por_area} />
-                            </div>
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] px-1">Fecha Fin</label>
+                            <input
+                                type="date"
+                                className="premium-input !py-1.5 !px-3 shadow-none border-[#f1f5f9]"
+                                value={fechaInd.fin}
+                                onChange={e => setFechaInd(p => ({ ...p, fin: e.target.value }))}
+                            />
                         </div>
+                        {hayFiltroInd && (
+                            <button
+                                onClick={() => setFechaInd({ inicio: '', fin: '' })}
+                                className="text-[10px] font-black text-[#9e1a53] uppercase hover:underline mb-2"
+                            >
+                                Limpiar
+                            </button>
+                        )}
+                        <div className="ml-auto text-right">
+                            <div className="text-[9px] font-black text-[#94a3b8] uppercase">Mostrando</div>
+                            <div className="text-xs font-black text-[#00a3e0]">{totalInd} casos</div>
+                        </div>
+                    </div>
 
-                        {/* Recientes */}
-                        {stats.registros && stats.registros.length > 0 && (
-                            <div className="bg-white rounded-2xl border border-[#edf2f7] shadow-sm overflow-hidden">
-                                <div className="p-5 border-b border-[#f1f5f9]">
-                                    <h3 className="text-[13px] font-black uppercase tracking-widest text-[#64748b]">Últimos Reportes</h3>
-                                </div>
-                                <div className="divide-y divide-[#f8fafc]">
-                                    {stats.registros.slice(0, 5).map(r => (
-                                        <div key={r.id} className="p-4 flex items-start justify-between gap-4">
-                                            <div className="flex-1 min-w-0">
-                                                <div className="font-bold text-[13px] text-[#1a202c]">{r.nombre_empleado}</div>
-                                                <div className="text-[11px] text-[#64748b] mt-0.5">{r.categoria} · {r.area}</div>
-                                                <div className="text-[12px] text-[#94a3b8] mt-1 truncate">{r.descripcion}</div>
+                    {/* KPIs principales compactos */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <KpiCard label="Total Reportes" value={totalInd} sub={hayFiltroInd ? 'Filtrado' : 'Total histórico'} color="#00a3e0" icon="📊" />
+                        <KpiCard label="Nuevos Hoy" value={hoyInd} sub="Registrados hoy" color="#0ea5e9" icon="✨" />
+                        <KpiCard label="Pendientes" value={por_estado.pendiente || 0} sub="Por gestionar" color="#f59e0b" icon="⏳" />
+                        <KpiCard label="Confirmados" value={por_estado.confirmado || 0} sub="Finalizados" color="#22c55e" icon="🎯" />
+                    </div>
+
+                    {/* Análisis: estado + categorías */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Distribución por estado */}
+                        <div className="premium-card p-8">
+                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#64748b] mb-8 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-[#00a3e0]" /> Estado Actual
+                            </h3>
+                            <div className="space-y-6">
+                                {Object.entries(ESTADO_CONFIG).map(([key, cfg]) => {
+                                    const val = por_estado[key] || 0;
+                                    const pct = totalInd > 0 ? Math.round((val / totalInd) * 100) : 0;
+                                    return (
+                                        <div key={key} className="group">
+                                            <div className="flex justify-between items-end text-[12px] mb-2">
+                                                <span className="font-black text-gray-800">{cfg.label}</span>
+                                                <div className="text-right">
+                                                    <span className="font-black text-[#64748b] mr-2">{val}</span>
+                                                    <span className="text-[10px] font-black px-1.5 py-0.5 bg-gray-100 rounded text-gray-400">{pct}%</span>
+                                                </div>
                                             </div>
-                                            <div className="flex flex-col items-end gap-1 shrink-0">
-                                                <span className="text-[10px] font-bold px-2 py-1 rounded-lg"
-                                                    style={{ color: ESTADO_CONFIG[r.estado]?.color, background: ESTADO_CONFIG[r.estado]?.bg }}>
-                                                    {ESTADO_CONFIG[r.estado]?.label}
-                                                </span>
+                                            <div className="h-2.5 bg-[#f1f5f9] rounded-full overflow-hidden p-[1px]">
+                                                <div className="h-full rounded-full transition-all duration-1000 shadow-sm" style={{ width: `${pct}%`, background: cfg.color }} />
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+                                    );
+                                })}
                             </div>
-                        )}
-                    </div>
-                )}
+                        </div>
 
-                {/* ===== TAB: REPORTES ===== */}
-                {tab === 'reportes' && (
-                    <div className="space-y-5">
-                        {/* Filtros */}
-                        <div className="bg-white rounded-2xl p-5 border border-[#edf2f7] shadow-sm">
-                            <div className="flex justify-between items-center mb-3">
-                                <span className="text-[11px] font-bold uppercase tracking-widest text-[#64748b]">Filtros</span>
-                                <span className="text-[11px] font-bold text-[#00a3e0]">{registrosFiltrados.length} resultado{registrosFiltrados.length !== 1 ? 's' : ''}</span>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-7 gap-3">
-                                {/* Buscador por nombre del reportado */}
+                        {/* Categorías más reportadas */}
+                        <div className="premium-card p-8 lg:col-span-2">
+                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#64748b] mb-8 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-pink-500" /> Categorías Top
+                            </h3>
+                            {Object.keys(por_categoria).length === 0 ? (
+                                <div className="h-48 flex items-center justify-center text-[#94a3b8] italic text-sm border-2 border-dashed border-gray-50 rounded-3xl">Sin datos aún en este rango.</div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {Object.entries(por_categoria)
+                                        .sort((a, b) => b[1] - a[1])
+                                        .map(([cat, val]) => (
+                                            <div key={cat} className="flex items-center justify-between bg-gray-50/50 hover:bg-[#e6f6fd] border border-transparent hover:border-[#00a3e0]/20 rounded-2xl px-5 py-4 transition-all group">
+                                                <span className="text-[13px] font-black text-gray-700 group-hover:text-[#00a3e0]">{cat}</span>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-1 w-12 bg-gray-200 rounded-full overflow-hidden hidden sm:block">
+                                                        <div className="h-full bg-[#00a3e0] opacity-30" style={{ width: `${(val / totalInd) * 100}%` }} />
+                                                    </div>
+                                                    <span className="text-2xl font-black text-gray-900 group-hover:scale-110 transition-transform">{val}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Participación por área */}
+                    {Object.keys(por_area).length > 0 && (
+                        <div className="premium-card p-8">
+                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#64748b] mb-8 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-green-500" /> Rendimiento por Área
+                            </h3>
+                            <BarChart data={Object.fromEntries(
+                                Object.entries(por_area).sort((a, b) => b[1] - a[1])
+                            )} />
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ===== TAB: REPORTES ===== */}
+            {tab === 'reportes' && (
+                <div className="space-y-6 animate-fade-in-up">
+                    {/* Filtros */}
+                    <div className="premium-card p-6">
+                        <div className="flex justify-between items-center mb-6 border-b border-[#f1f5f9] pb-3">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-[#64748b]">Filtros de Búsqueda</span>
+                            <span className="text-[10px] font-black text-[#00a3e0] bg-[#e6f6fd] px-2.5 py-1 rounded-lg">{registrosFiltrados.length} Resultados</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                            <div className="lg:col-span-2">
+                                <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 block">Responsable</label>
                                 <input
                                     type="text"
-                                    className="p-2 border border-[#cbd5e1] rounded-xl text-[13px] outline-none focus:border-[#00a3e0]"
-                                    placeholder="Buscar reportado..."
+                                    className="premium-input !py-2 shadow-none border-[#f1f5f9]"
+                                    placeholder="Buscar por nombre..."
                                     value={filtros.nombre_responsable}
                                     onChange={e => setFiltros(p => ({ ...p, nombre_responsable: e.target.value }))}
                                 />
-                                {/* Estado */}
+                            </div>
+                            <div>
+                                <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 block">Estado</label>
                                 <select
-                                    className="p-2 border border-[#cbd5e1] rounded-xl text-[13px] outline-none focus:border-[#00a3e0]"
+                                    className="premium-input !py-2 shadow-none border-[#f1f5f9]"
                                     value={filtros.estado}
                                     onChange={e => setFiltros(p => ({ ...p, estado: e.target.value }))}
                                 >
-                                    <option value="">Todos los estados</option>
+                                    <option value="">Todos</option>
                                     <option value="pendiente">Pendiente</option>
                                     <option value="confirmado">Confirmado</option>
                                     <option value="no_confirmado">No Confirmado</option>
                                 </select>
-
-                                {/* Área desde BD */}
+                            </div>
+                            <div>
+                                <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 block">Área</label>
                                 <select
-                                    className="p-2 border border-[#cbd5e1] rounded-xl text-[13px] outline-none focus:border-[#00a3e0]"
+                                    className="premium-input !py-2 shadow-none border-[#f1f5f9]"
                                     value={filtros.area}
                                     onChange={e => setFiltros(p => ({ ...p, area: e.target.value }))}
                                 >
-                                    <option value="">Todas las áreas</option>
+                                    <option value="">Todas</option>
                                     {(stats.areas || []).map(a => (
                                         <option key={a} value={a}>{a}</option>
                                     ))}
                                 </select>
-
-                                {/* Fecha inicio */}
-                                <div className="flex flex-col gap-0.5">
-                                    <label className="text-[9px] font-bold uppercase text-[#94a3b8] px-1">Desde</label>
+                            </div>
+                            <div className="lg:col-span-2 grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 block">Desde</label>
                                     <input
                                         type="date"
-                                        className="p-2 border border-[#cbd5e1] rounded-xl text-[13px] outline-none focus:border-[#00a3e0]"
+                                        className="premium-input !py-2 shadow-none border-[#f1f5f9]"
                                         value={filtros.fecha_inicio}
                                         onChange={e => setFiltros(p => ({ ...p, fecha_inicio: e.target.value }))}
                                     />
                                 </div>
-
-                                {/* Fecha fin */}
-                                <div className="flex flex-col gap-0.5">
-                                    <label className="text-[9px] font-bold uppercase text-[#94a3b8] px-1">Hasta</label>
+                                <div>
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 block">Hasta</label>
                                     <input
                                         type="date"
-                                        className="p-2 border border-[#cbd5e1] rounded-xl text-[13px] outline-none focus:border-[#00a3e0]"
+                                        className="premium-input !py-2 shadow-none border-[#f1f5f9]"
                                         value={filtros.fecha_fin}
                                         onChange={e => setFiltros(p => ({ ...p, fecha_fin: e.target.value }))}
                                     />
                                 </div>
-
-                                {/* Exportar Excel */}
-                                <button
-                                    onClick={exportar}
-                                    className="p-2 bg-green-600 text-white rounded-xl text-[12px] font-bold hover:bg-green-700 transition-colors self-end"
-                                >
-                                    📊 Excel
-                                </button>
-
-                                {/* Exportar PDF */}
-                                <button
-                                    onClick={exportarPdf}
-                                    className="p-2 bg-red-600 text-white rounded-xl text-[12px] font-bold hover:bg-red-700 transition-colors self-end"
-                                >
-                                    📄 PDF
-                                </button>
                             </div>
                         </div>
-
-                        {/* Lista desplegable */}
-                        <div className="space-y-2">
-                            {registrosFiltrados.length === 0 ? (
-                                <div className="bg-white rounded-2xl p-12 text-center text-[#94a3b8] italic border border-[#edf2f7]">
-                                    No hay reportes que coincidan con los filtros.
-                                </div>
-                            ) : registrosFiltrados.map(r => (
-                                <ReporteItem key={r.id} r={r} onGestionar={abrirModal} />
-                            ))}
+                        <div className="mt-4 flex gap-2 justify-end">
+                            <button onClick={exportar} className="premium-button-primary !py-2 !px-4 text-xs !bg-green-600 hover:!bg-green-700 shadow-none">Excel</button>
+                            <button onClick={exportarPdf} className="premium-button-primary !py-2 !px-4 text-xs !bg-red-600 hover:!bg-red-700 shadow-none">PDF</button>
                         </div>
                     </div>
-                )}
 
-                {/* ===== TAB: ANÁLISIS ===== */}
-                {tab === 'analisis' && (
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                            {/* Distribución por estado */}
-                            <div className="bg-white rounded-2xl p-6 border border-[#edf2f7] shadow-sm md:col-span-1">
-                                <h3 className="text-[13px] font-black uppercase tracking-widest text-[#64748b] mb-5">Estado de Reportes</h3>
-                                <div className="space-y-4">
-                                    {Object.entries(ESTADO_CONFIG).map(([key, cfg]) => {
-                                        const val = por_estado[key] || 0;
-                                        const pct = stats.total > 0 ? Math.round((val / stats.total) * 100) : 0;
-                                        return (
-                                            <div key={key}>
-                                                <div className="flex justify-between text-[12px] mb-1">
-                                                    <span className="font-bold">{cfg.dot} {cfg.label}</span>
-                                                    <span className="font-black text-[#64748b]">{pct}% ({val})</span>
-                                                </div>
-                                                <div className="h-3 bg-[#f1f5f9] rounded-full overflow-hidden">
-                                                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: cfg.color }} />
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                    <div className="premium-card !p-0 overflow-hidden bg-white">
+                        {registrosFiltrados.length === 0 ? (
+                            <div className="p-20 text-center flex flex-col items-center gap-2">
+                                <div className="text-4xl">🔍</div>
+                                <div className="text-gray-400 font-bold italic text-sm">Sin resultados.</div>
+                                <button onClick={() => setFiltros({ estado: '', area: '', fecha_inicio: '', fecha_fin: '', nombre_responsable: '' })} className="text-[#00a3e0] font-black text-[10px] uppercase hover:underline mt-2">Limpiar filtros</button>
                             </div>
-
-                            {/* Top categorías */}
-                            <div className="bg-white rounded-2xl p-6 border border-[#edf2f7] shadow-sm md:col-span-2">
-                                <h3 className="text-[13px] font-black uppercase tracking-widest text-[#64748b] mb-5">Categorías más Reportadas</h3>
-                                {Object.keys(por_categoria).length === 0 ? (
-                                    <p className="text-[#94a3b8] text-sm italic">Sin datos aún.</p>
-                                ) : (
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {Object.entries(por_categoria)
-                                            .sort((a, b) => b[1] - a[1])
-                                            .map(([cat, val]) => (
-                                                <div key={cat} className="flex items-center justify-between bg-[#e6f6fd] rounded-xl px-4 py-3">
-                                                    <span className="text-[13px] font-bold text-[#00a3e0]">{cat}</span>
-                                                    <span className="text-[20px] font-black text-[#00a3e0]">{val}</span>
-                                                </div>
-                                            ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Áreas con más reportes */}
-                        {Object.keys(por_area).length > 0 && (
-                            <div className="bg-white rounded-2xl p-6 border border-[#edf2f7] shadow-sm">
-                                <h3 className="text-[13px] font-black uppercase tracking-widest text-[#64748b] mb-5">Participación por Área</h3>
-                                <BarChart data={Object.fromEntries(
-                                    Object.entries(por_area).sort((a, b) => b[1] - a[1])
-                                )} />
-                            </div>
-                        )}
+                        ) : registrosFiltrados.map(r => (
+                            <ReporteItem key={r.id} r={r} onGestionar={abrirModal} />
+                        ))}
                     </div>
-                )}
-            </div>
+                </div>
+            )}
 
             {/* Modal gestionar estado */}
             {modalData && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
-                    <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
-                        <div className="p-6 border-b border-[#f1f5f9] bg-[#e6f6fd]">
-                            <h3 className="text-[16px] font-black text-[#00a3e0]">Gestionar Oportunidad #{modalData.id}</h3>
-                            <p className="text-[12px] text-[#64748b] mt-1">{modalData.nombre_empleado} · {modalData.area}</p>
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[300] p-4 animate-in fade-in duration-300">
+                    <div className="premium-card max-w-lg w-full shadow-2xl overflow-hidden border-[#f1f5f9] animate-fade-in-up">
+                        <div className="p-8 border-b border-[#f1f5f9] bg-gradient-to-r from-[#e6f6fd] to-white flex justify-between items-start">
+                            <div>
+                                <h3 className="text-2xl font-black text-[#00a3e0] tracking-tight">Gestionar Reporte</h3>
+                                <p className="text-[12px] font-bold text-[#64748b] mt-1 uppercase tracking-widest">Caso #{modalData.id} · {modalData.area}</p>
+                            </div>
+                            <button onClick={() => setModalData(null)} className="text-gray-400 hover:text-gray-600 transition-colors text-2xl font-light">✕</button>
                         </div>
-                        <div className="p-6 space-y-4">
-                            <div className="bg-[#f8fafc] rounded-xl p-4 text-[13px] text-[#64748b] leading-relaxed">
+                        <div className="p-8 space-y-6">
+                            <div className="bg-gray-50 rounded-2xl p-5 text-[13px] text-[#475569] leading-relaxed border border-gray-100 shadow-inner max-h-32 overflow-y-auto">
+                                <div className="text-[9px] font-black text-[#94a3b8] uppercase mb-1">Descripción del caso</div>
                                 {modalData.descripcion}
                             </div>
-                            <div>
-                                <label className="text-[10px] font-bold uppercase text-[#64748b] mb-2 block">Cambiar Estado</label>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-[#64748b] px-1">Cambiar Estado</label>
                                 <select
-                                    className="w-full p-3 border border-[#cbd5e1] rounded-xl text-[14px] outline-none focus:border-[#00a3e0]"
+                                    className="premium-input !py-3 !text-base shadow-sm"
                                     value={estadoForm.data.estado}
                                     onChange={e => estadoForm.setData('estado', e.target.value)}
                                 >
-                                    <option value="pendiente">Pendiente</option>
-                                    <option value="confirmado">Confirmado</option>
-                                    <option value="no_confirmado">No Confirmado</option>
+                                    <option value="pendiente">⏳ Pendiente</option>
+                                    <option value="confirmado">✅ Confirmado</option>
+                                    <option value="no_confirmado">❌ No Confirmado</option>
                                 </select>
                             </div>
-                            <div>
-                                <label className="text-[10px] font-bold uppercase text-[#64748b] mb-2 block">Observación (opcional)</label>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-[#64748b] px-1">Observación Administrativa</label>
                                 <textarea
-                                    className="w-full p-3 border border-[#cbd5e1] rounded-xl text-[14px] outline-none focus:border-[#00a3e0] resize-none"
-                                    rows={3}
-                                    placeholder="Acciones tomadas, comentarios..."
+                                    className="premium-input !py-3 min-h-[100px] resize-none shadow-sm"
+                                    placeholder="Detalla las acciones tomadas o comentarios sobre este caso..."
                                     value={estadoForm.data.observacion_admin}
                                     onChange={e => estadoForm.setData('observacion_admin', e.target.value)}
                                 />
+                                <p className="text-[9px] text-[#94a3b8] font-bold uppercase text-right">Visible para el administrador</p>
                             </div>
                         </div>
-                        <div className="p-6 border-t border-[#f1f5f9] flex gap-3">
+                        <div className="p-8 border-t border-[#f1f5f9] flex gap-4 bg-gray-50/30">
                             <button
                                 onClick={() => setModalData(null)}
-                                className="flex-1 p-3 border border-[#cbd5e1] rounded-xl text-[13px] font-bold text-[#64748b] hover:bg-[#f8fafc] transition-colors"
+                                className="flex-1 premium-button-secondary"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={guardarEstado}
                                 disabled={estadoForm.processing}
-                                className="flex-1 p-3 bg-[#00a3e0] text-white rounded-xl text-[13px] font-bold hover:bg-[#007db0] transition-colors"
+                                className="flex-1 premium-button-primary"
                             >
-                                {estadoForm.processing ? 'Guardando...' : 'Guardar Cambios'}
+                                {estadoForm.processing ? 'Procesando...' : 'Guardar Cambios'}
                             </button>
                         </div>
                     </div>
@@ -483,3 +475,4 @@ export default function Indicadores({ auth, stats }) {
         </AuthenticatedLayout>
     );
 }
+

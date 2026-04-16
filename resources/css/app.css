@@ -6,15 +6,22 @@
 
 :root {
     --primary: #00a2e1;
-    --primary-dark: #0084b9;
-    --secondary: #9e1a53;
+    --primary-hover: #0084b9;
+    --card-radius: 12px;
+    --btn-radius: 10px;
+    --sidebar-width: 250px;
     --bg-main: #f8fafc;
+    --surface: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border-light: #f1f5f9;
 }
 
 body {
     font-family: 'Outfit', sans-serif;
     background-color: var(--bg-main);
-    color: #1e293b;
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
 }
 
 .glass {
@@ -26,44 +33,77 @@ body {
 
 .premium-card {
     background: white;
-    border-radius: 24px;
+    border-radius: var(--card-radius);
+    padding: 1.25rem;
     border: 1px solid #f1f5f9;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
 }
 
 .premium-card:hover {
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
-    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .premium-input {
-    @apply w-full border-gray-200 rounded-xl text-sm focus:border-[#00a2e1] focus:ring-[#00a2e1] transition-all;
+    @apply w-full border-gray-200 rounded-xl text-sm transition-all;
     padding: 12px 16px;
 }
 
+.premium-input:focus {
+    @apply ring-4 ring-[#00a2e1]/10 border-[#00a2e1] outline-none;
+}
+
 .premium-button-primary {
-    @apply bg-[#00a2e1] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#0084b9] transition-all active:scale-95 shadow-lg shadow-[#00a2e1]/20;
+    @apply bg-[#00a2e1] text-white px-6 py-3 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-[#00a2e1]/20;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.premium-button-primary:hover {
+    @apply bg-[#0084b9] -translate-y-0.5 shadow-xl shadow-[#00a2e1]/30;
 }
 
 .premium-button-secondary {
-    @apply bg-white text-gray-700 px-6 py-3 rounded-xl font-bold border border-gray-200 hover:bg-gray-50 transition-all active:scale-95 shadow-sm;
+    @apply bg-white text-gray-700 px-6 py-3 rounded-xl font-bold border border-gray-100 transition-all active:scale-95 shadow-sm;
+}
+
+.premium-button-secondary:hover {
+    @apply bg-gray-50 -translate-y-0.5 border-gray-200 shadow-md;
 }
 
 .gradient-text {
-    background: linear-gradient(135deg, #00a2e1 0%, #0084b9 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .stat-icon {
-    @apply w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-inner;
+    @apply w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-inner transition-transform;
+}
+
+.premium-card:hover .stat-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -71,10 +111,11 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: #e2e8f0;
     border-radius: 10px;
+    border: 2px solid var(--bg-main);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: #cbd5e1;
 }

@@ -132,7 +132,8 @@ class RegistroController extends Controller
         $topEjercicios = array_slice($ejerciciosCount, 0, 5, true);
 
         // Actividad por día con filtros aplicados
-        $porDia = (clone $query)->selectRaw('DATE(created_at) as date, COUNT(*) as count, SUM(duracion_minutos) as total_min')
+        $porDia = (clone $query)->reorder()
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as count, SUM(duracion_minutos) as total_min')
             ->groupBy('date')
             ->orderBy('date', 'desc')
             ->limit(10)
