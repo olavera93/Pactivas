@@ -57,6 +57,9 @@ export default function AuthenticatedLayout({ header, children }) {
                                 <NavLink href={route('admin.departamentos')} active={route().current('admin.departamentos')}>
                                     Departamentos
                                 </NavLink>
+                                <NavLink href={route('admin.indicadores')} active={route().current('admin.indicadores')}>
+                                    Indicadores
+                                </NavLink>
                             </div>
                         </div>
 
@@ -106,6 +109,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         <ResponsiveNavLink href={route('admin.colaboradores')} active={route().current('admin.colaboradores')}>Colaboradores</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('admin.ejercicios')} active={route().current('admin.ejercicios')}>Rutinas</ResponsiveNavLink>
                         <ResponsiveNavLink href={route('admin.departamentos')} active={route().current('admin.departamentos')}>Departamentos</ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('admin.indicadores')} active={route().current('admin.indicadores')}>Indicadores</ResponsiveNavLink>
                     </div>
 
                     <div className="border-t border-gray-100 pb-1 pt-4">

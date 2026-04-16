@@ -4,6 +4,7 @@ use App\Http\Controllers\EjercicioController;
 use App\Http\Controllers\RegistroController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ColaboradorController;
+use App\Http\Controllers\OportunidadMejoraController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -12,6 +13,10 @@ Route::get('/', function () {
 });
 
 Route::get('/registro', [RegistroController::class, 'index'])->name('registro');
+
+// Módulo Oportunidades de Mejora (público)
+Route::get('/oportunidades', [OportunidadMejoraController::class, 'index'])->name('oportunidades');
+Route::post('/api/oportunidades', [OportunidadMejoraController::class, 'store'])->name('oportunidades.store');
 
 Route::get('/ejercicios', [EjercicioController::class, 'index']);
 Route::post('/api/registro', [RegistroController::class, 'store'])->name('registro.store');
@@ -48,6 +53,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/admin/ejercicios', [EjercicioController::class, 'store'])->name('admin.ejercicios.store');
     Route::post('/admin/ejercicios/{ejercicio}', [EjercicioController::class, 'update'])->name('admin.ejercicios.update'); // POST para manejar archivos
     Route::delete('/admin/ejercicios/{ejercicio}', [EjercicioController::class, 'destroy'])->name('admin.ejercicios.destroy');
+
+    // Módulo Indicadores de Mejora (admin)
+    Route::get('/admin/indicadores', [OportunidadMejoraController::class, 'adminIndex'])->name('admin.indicadores');
+    Route::get('/admin/indicadores/stats', [OportunidadMejoraController::class, 'stats'])->name('admin.indicadores.stats');
+    Route::patch('/admin/indicadores/{oportunidad}', [OportunidadMejoraController::class, 'updateEstado'])->name('admin.indicadores.estado');
+    Route::get('/admin/indicadores/export', [OportunidadMejoraController::class, 'export'])->name('admin.indicadores.export');
+    Route::get('/admin/indicadores/export-pdf', [OportunidadMejoraController::class, 'exportPdf'])->name('admin.indicadores.export.pdf');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
