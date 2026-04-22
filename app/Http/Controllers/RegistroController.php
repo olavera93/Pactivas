@@ -50,7 +50,7 @@ class RegistroController extends Controller
                 $r->area,
                 $r->ejercicios_realizados,
                 $r->duracion_minutos,
-                $r->created_at->format('Y-m-d H:i:s')
+                $r->created_at->format('d/m/Y H:i')
             ];
         }
 

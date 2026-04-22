@@ -2,7 +2,7 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import { Link, usePage, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function SidebarLink({ href, active, children, icon }) {
     return (
@@ -26,21 +26,31 @@ export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { flash } = usePage().props;
+    const [showFlash, setShowFlash] = useState(false);
+
+    useEffect(() => {
+        if (flash.success) {
+            setShowFlash(true);
+            const t = setTimeout(() => setShowFlash(false), 3000);
+            return () => clearTimeout(t);
+        }
+    }, [flash.success]);
 
     const navItems = [
-        { href: route('dashboard'), active: route().current('dashboard'), label: 'Pausas', icon: '📊' },
+        { href: route('dashboard'), active: route().current('dashboard'), label: 'Bienestar', icon: '📊' },
         { href: route('admin.colaboradores'), active: route().current('admin.colaboradores'), label: 'Colaboradores', icon: '👥' },
         { href: route('admin.ejercicios'), active: route().current('admin.ejercicios'), label: 'Rutinas', icon: '⚡' },
         { href: route('admin.departamentos'), active: route().current('admin.departamentos'), label: 'Áreas', icon: '🏢' },
         { href: route('admin.indicadores'), active: route().current('admin.indicadores'), label: 'Indicadores', icon: '📈' },
+        ...(user.role === 'admin' ? [{ href: route('admin.usuarios'), active: route().current('admin.usuarios'), label: 'Usuarios', icon: '🔐' }] : []),
     ];
 
     return (
         <div className="min-h-screen bg-[#f8fafc] font-['Outfit'] flex overflow-hidden">
             {/* Flash Messages */}
             <div className="fixed top-6 right-6 z-[200] flex flex-col gap-2 max-w-sm">
-                {flash.success && (
-                    <div className="bg-white border-l-4 border-green-500 text-gray-800 px-5 py-3 rounded-xl shadow-xl animate-fade-in-up flex items-center gap-3">
+                {showFlash && flash.success && (
+                    <div className="bg-white border-l-4 border-green-500 text-gray-800 px-5 py-3 rounded-xl shadow-xl flex items-center gap-3">
                         <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center text-lg shrink-0">✅</div>
                         <div className="font-bold text-xs">{flash.success}</div>
                     </div>

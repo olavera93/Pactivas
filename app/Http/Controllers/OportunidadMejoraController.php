@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
 use App\Models\Colaborador;
 use App\Models\OportunidadMejora;
 use Illuminate\Http\Request;
@@ -14,7 +15,8 @@ class OportunidadMejoraController extends Controller
     {
         return Inertia::render('Mejoras/Registro', [
             'colaboradores' => Colaborador::select('id', 'nombres', 'apellidos', 'area', 'documento')
-                ->orderBy('nombres')->get()
+                ->orderBy('nombres')->get(),
+            'categorias' => Categoria::orderBy('nombre')->pluck('nombre'),
         ]);
     }
 
@@ -24,9 +26,10 @@ class OportunidadMejoraController extends Controller
         $request->validate([
             'no_orden'           => 'nullable|string|max:100',
             'nombre_empleado'    => 'required|string|max:150',
-            'nombre_responsable'  => 'nullable|string|max:150',
-            'area_responsable'    => 'nullable|string|max:100',
-            'fecha_caso'         => 'required|date',
+            'nombre_responsable'   => 'nullable|string|max:150',
+            'documento_responsable'=> 'nullable|string|max:50',
+            'area_responsable'     => 'nullable|string|max:100',
+            'fecha_caso'           => 'required|date',
             'area'               => 'required|string|max:100',
             'categoria'          => 'required|string|max:80',
             'descripcion'         => 'required|string|min:10',
@@ -37,8 +40,9 @@ class OportunidadMejoraController extends Controller
         OportunidadMejora::create([
             'no_orden'            => $request->no_orden,
             'nombre_empleado'     => $request->nombre_empleado,
-            'nombre_responsable'  => $request->nombre_responsable,
-            'area_responsable'    => $request->area_responsable,
+            'nombre_responsable'   => $request->nombre_responsable,
+            'documento_responsable'=> $request->documento_responsable,
+            'area_responsable'     => $request->area_responsable,
             'fecha_caso'          => $request->fecha_caso,
             'documento_empleado'  => $request->documento_empleado,
             'area'                => $request->area,
@@ -56,7 +60,8 @@ class OportunidadMejoraController extends Controller
     public function adminIndex()
     {
         return Inertia::render('Admin/Indicadores', [
-            'stats' => $this->buildStats(),
+            'stats'      => $this->buildStats(),
+            'categorias' => Categoria::orderBy('nombre')->get(['id', 'nombre']),
         ]);
     }
 
@@ -96,6 +101,8 @@ class OportunidadMejoraController extends Controller
         $oportunidad->update([
             'estado'            => $request->estado,
             'observacion_admin' => $request->observacion_admin,
+            'revisado_por'    => auth()->user()->name,
+            'fecha_revision'     => now(),
         ]);
 
         return redirect()->back()->with('success', 'Estado actualizado correctamente.');
@@ -113,7 +120,7 @@ class OportunidadMejoraController extends Controller
 
         $registros = $query->orderBy('created_at', 'desc')->get();
 
-        $data = [['ID', 'Nº Orden', 'Empleado', 'Responsable', 'Documento', 'Área', 'Categoría', 'Descripción', 'Estado', 'Observación Admin', 'Fecha Caso', 'Fecha Registro']];
+        $data = [['ID', 'Nº Orden', 'Reportado Por', 'Responsable', 'Documento Reportante', 'Área', 'Categoría', 'Descripción', 'Estado', 'Observación Admin', 'Revisado Por', 'Fecha Revisión', 'Fecha Caso', 'Fecha Registro']];
 
         foreach ($registros as $r) {
             $data[] = [
@@ -127,8 +134,10 @@ class OportunidadMejoraController extends Controller
                 $r->descripcion,
                 ucfirst(str_replace('_', ' ', $r->estado)),
                 $r->observacion_admin ?? '',
-                $r->fecha_caso ?? '',
-                $r->created_at->format('Y-m-d H:i:s'),
+                $r->revisado_por ?? '',
+                $r->fecha_revision ? \Carbon\Carbon::parse($r->fecha_revision)->format('d/m/Y H:i') : '',
+                $r->fecha_caso ? \Carbon\Carbon::parse($r->fecha_caso)->format('d/m/Y') : '',
+                $r->created_at->format('d/m/Y H:i'),
             ];
         }
 

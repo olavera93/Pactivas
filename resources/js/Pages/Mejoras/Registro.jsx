@@ -1,26 +1,30 @@
 import React, { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 
-const CATEGORIAS = [
-    'Proceso', 'Seguridad', 'Calidad', 'Ambiente',
-    'Comunicación', 'Equipos', 'Capacitación', 'Otro'
-];
+const toISO = (dmy) => {
+    if (!dmy) return '';
+    const [d, m, y] = dmy.split('/');
+    if (!d || !m || !y || y.length !== 4) return '';
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+};
 
-export default function RegistroMejoras({ colaboradores = [] }) {
+export default function RegistroMejoras({ colaboradores = [], categorias = [] }) {
     const [showModal, setShowModal] = useState(false);
     const [showReporta, setShowReporta] = useState(false);
     const [showResponsable, setShowResponsable] = useState(false);
+    const [fechaCasoDisplay, setFechaCasoDisplay] = useState('');
 
     const { data, setData, post, reset, processing, errors } = useForm({
-        no_orden:             '',
-        nombre_empleado:      '',
-        nombre_responsable:   '',
-        area_responsable:     '',
-        fecha_caso:           '',
-        documento_empleado:   '',
-        area:                 '',
-        categoria:            '',
-        descripcion:          '',
+        no_orden:               '',
+        nombre_empleado:        '',
+        nombre_responsable:     '',
+        documento_responsable:  '',
+        area_responsable:       '',
+        fecha_caso:             '',
+        documento_empleado:     '',
+        area:                   '',
+        categoria:              '',
+        descripcion:            '',
     });
 
     const filteredReporta = colaboradores.filter(c =>
@@ -83,7 +87,7 @@ export default function RegistroMejoras({ colaboradores = [] }) {
                                 1. Categoría de la Oportunidad
                             </label>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                {CATEGORIAS.map(cat => (
+                                {categorias.map(cat => (
                                     <div
                                         key={cat}
                                         className={`cat-card rounded-xl p-3 text-center ${data.categoria === cat ? 'active' : ''}`}
@@ -148,6 +152,43 @@ export default function RegistroMejoras({ colaboradores = [] }) {
                             {errors.fecha_caso && <p className="text-red-500 text-xs">{errors.fecha_caso}</p>}
                         </div>
 
+                        {/* Responsable del error */}
+                        <div className="relative flex flex-col gap-1">
+                            <label className="text-[11px] font-bold uppercase text-[#64748b]">Responsable del caso</label>
+                            <p className="text-[10px] text-[#94a3b8] -mt-1">Persona que originó o debe gestionar la oportunidad</p>
+                            <input
+                                type="text"
+                                className="w-full p-3 border border-[#cbd5e1] rounded-xl text-[14px] outline-none bg-[#f8fafc] focus:border-[#00a3e0] transition-colors"
+                                placeholder="Nombre del responsable..."
+                                value={data.nombre_responsable}
+                                onChange={e => { setData('nombre_responsable', e.target.value); setShowResponsable(true); setShowReporta(false); }}
+                                onFocus={() => { setShowResponsable(true); setShowReporta(false); }}
+                            />
+                            {showResponsable && data.nombre_responsable.length > 1 && filteredResponsable.length > 0 && (
+                                <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 mt-1 rounded-xl shadow-lg z-50 overflow-hidden">
+                                    {filteredResponsable.map(c => (
+                                        <div
+                                            key={c.id}
+                                            className="p-3 hover:bg-[#e6f6fd] cursor-pointer text-sm border-b border-gray-50 last:border-0"
+                                            onClick={() => {
+                                                setData(prev => ({
+                                                    ...prev,
+                                                    nombre_responsable:    c.nombres + ' ' + c.apellidos,
+                                                    documento_responsable: c.documento || '',
+                                                    area_responsable:      c.area,
+                                                }));
+                                                setShowResponsable(false);
+                                            }}
+                                        >
+                                            <div className="font-bold text-[#1a202c]">{c.nombres} {c.apellidos}</div>
+                                            <div className="text-[10px] text-[#94a3b8] uppercase">{c.area}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {errors.nombre_responsable && <p className="text-red-500 text-xs">{errors.nombre_responsable}</p>}
+                        </div>
+
                         {/* Quien reporta */}
                         <div className="relative flex flex-col gap-1">
                             <label className="text-[11px] font-bold uppercase text-[#64748b]">Reportado por</label>
@@ -183,42 +224,6 @@ export default function RegistroMejoras({ colaboradores = [] }) {
                                 </div>
                             )}
                             {errors.nombre_empleado && <p className="text-red-500 text-xs">{errors.nombre_empleado}</p>}
-                        </div>
-
-                        {/* Responsable del error */}
-                        <div className="relative flex flex-col gap-1">
-                            <label className="text-[11px] font-bold uppercase text-[#64748b]">Responsable del caso</label>
-                            <p className="text-[10px] text-[#94a3b8] -mt-1">Persona que originó o debe gestionar la oportunidad</p>
-                            <input
-                                type="text"
-                                className="w-full p-3 border border-[#cbd5e1] rounded-xl text-[14px] outline-none bg-[#f8fafc] focus:border-[#00a3e0] transition-colors"
-                                placeholder="Nombre del responsable..."
-                                value={data.nombre_responsable}
-                                onChange={e => { setData('nombre_responsable', e.target.value); setShowResponsable(true); setShowReporta(false); }}
-                                onFocus={() => { setShowResponsable(true); setShowReporta(false); }}
-                            />
-                            {showResponsable && data.nombre_responsable.length > 1 && filteredResponsable.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 mt-1 rounded-xl shadow-lg z-50 overflow-hidden">
-                                    {filteredResponsable.map(c => (
-                                        <div
-                                            key={c.id}
-                                            className="p-3 hover:bg-[#e6f6fd] cursor-pointer text-sm border-b border-gray-50 last:border-0"
-                                            onClick={() => {
-                                                setData(prev => ({
-                                                    ...prev,
-                                                    nombre_responsable: c.nombres + ' ' + c.apellidos,
-                                                    area_responsable:   c.area,
-                                                }));
-                                                setShowResponsable(false);
-                                            }}
-                                        >
-                                            <div className="font-bold text-[#1a202c]">{c.nombres} {c.apellidos}</div>
-                                            <div className="text-[10px] text-[#94a3b8] uppercase">{c.area}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                            {errors.nombre_responsable && <p className="text-red-500 text-xs">{errors.nombre_responsable}</p>}
                         </div>
 
                         <button

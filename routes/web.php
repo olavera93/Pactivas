@@ -5,6 +5,9 @@ use App\Http\Controllers\RegistroController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ColaboradorController;
 use App\Http\Controllers\OportunidadMejoraController;
+use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\ConsultaController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -19,6 +22,8 @@ Route::get('/oportunidades', [OportunidadMejoraController::class, 'index'])->nam
 Route::post('/api/oportunidades', [OportunidadMejoraController::class, 'store'])->name('oportunidades.store');
 
 Route::get('/ejercicios', [EjercicioController::class, 'index']);
+Route::get('/consulta', [ConsultaController::class, 'index'])->name('consulta');
+Route::post('/consulta', [ConsultaController::class, 'buscar'])->name('consulta.buscar');
 Route::post('/api/registro', [RegistroController::class, 'store'])->name('registro.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -54,12 +59,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/admin/ejercicios/{ejercicio}', [EjercicioController::class, 'update'])->name('admin.ejercicios.update'); // POST para manejar archivos
     Route::delete('/admin/ejercicios/{ejercicio}', [EjercicioController::class, 'destroy'])->name('admin.ejercicios.destroy');
 
+    // Gestión de Categorías
+    Route::post('/admin/categorias', [CategoriaController::class, 'store'])->name('admin.categorias.store');
+    Route::put('/admin/categorias/{categoria}', [CategoriaController::class, 'update'])->name('admin.categorias.update');
+    Route::delete('/admin/categorias/{categoria}', [CategoriaController::class, 'destroy'])->name('admin.categorias.destroy');
+
     // Módulo Indicadores de Mejora (admin)
     Route::get('/admin/indicadores', [OportunidadMejoraController::class, 'adminIndex'])->name('admin.indicadores');
     Route::get('/admin/indicadores/stats', [OportunidadMejoraController::class, 'stats'])->name('admin.indicadores.stats');
     Route::patch('/admin/indicadores/{oportunidad}', [OportunidadMejoraController::class, 'updateEstado'])->name('admin.indicadores.estado');
     Route::get('/admin/indicadores/export', [OportunidadMejoraController::class, 'export'])->name('admin.indicadores.export');
     Route::get('/admin/indicadores/export-pdf', [OportunidadMejoraController::class, 'exportPdf'])->name('admin.indicadores.export.pdf');
+
+    // Gestión de Usuarios
+    Route::get('/admin/usuarios', [UserController::class, 'index'])->name('admin.usuarios');
+    Route::post('/admin/usuarios', [UserController::class, 'store'])->name('admin.usuarios.store');
+    Route::put('/admin/usuarios/{usuario}', [UserController::class, 'update'])->name('admin.usuarios.update');
+    Route::patch('/admin/usuarios/{usuario}/password', [UserController::class, 'updatePassword'])->name('admin.usuarios.password');
+    Route::delete('/admin/usuarios/{usuario}', [UserController::class, 'destroy'])->name('admin.usuarios.destroy');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

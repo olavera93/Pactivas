@@ -227,11 +227,9 @@
 
     /* ── Signatures ── */
     .firma-section {
-        position: fixed;
-        bottom: 28px; left: 0; right: 0;
-        padding: 10px 30px 0;
+        padding: 20px 30px 0;
         border-top: 1px solid #e2e8f0;
-        background: white;
+        margin-top: 30px;
     }
     .firma-table { width: 100%; border-collapse: separate; border-spacing: 20px 0; }
     .firma-cell  { width: 50%; text-align: center; vertical-align: top; }
@@ -252,11 +250,10 @@
 
     /* ── Footer ── */
     .footer {
-        position: fixed;
-        bottom: 0; left: 0; right: 0;
         background: white;
         border-top: 1px solid #f1f5f9;
         padding: 4px 30px;
+        margin-top: 16px;
         font-size: 7px;
         color: #cbd5e1;
     }

@@ -12,6 +12,7 @@ class OportunidadMejora extends Model
         'no_orden',
         'nombre_empleado',
         'nombre_responsable',
+        'documento_responsable',
         'area_responsable',
         'fecha_caso',
         'documento_empleado',
@@ -21,6 +22,8 @@ class OportunidadMejora extends Model
 
         'estado',
         'observacion_admin',
+        'revisado_por',
+        'fecha_revision',
         'nombre_socializador',
         'nombre_receptor',
     ];

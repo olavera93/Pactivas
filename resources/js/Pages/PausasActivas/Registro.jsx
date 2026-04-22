@@ -62,7 +62,7 @@ export default function Registro({ colaboradores = [] }) {
 
     return (
         <div className="min-h-screen bg-[#f5fafd] p-4 font-['Outfit'] text-[#1e293b]">
-            <Head title="Pausas Activas - LFH" />
+            <Head title="Pausas Activas · Gestión LFH" />
 
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
@@ -105,7 +105,7 @@ export default function Registro({ colaboradores = [] }) {
 
                 {/* Columna Derecha: Panel de Registro */}
                 <aside className="bg-white rounded-2xl p-5 flex flex-col gap-4 border border-[#edf2f7] sticky top-4 h-fit">
-                    <div className="text-[#00a2e1] text-[10px] font-bold uppercase tracking-widest">REPORTE SST LFH</div>
+                    <div className="text-[#00a2e1] text-[10px] font-bold uppercase tracking-widest">GESTIÓN LFH</div>
                     <h2 className="text-[18px] font-bold">Registro Directo</h2>
 
                     <div className="flex flex-col gap-1 relative">

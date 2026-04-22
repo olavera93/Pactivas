@@ -2,9 +2,50 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
 
+const toISO = (dmy) => {
+    if (!dmy) return '';
+    const [d, m, y] = dmy.split('/');
+    if (!d || !m || !y || y.length !== 4) return '';
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+};
+
+const PER_PAGE = 10;
+
+function Paginador({ total, page, onPage }) {
+    const pages = Math.ceil(total / PER_PAGE);
+    if (pages <= 1) return null;
+    return (
+        <div className="flex items-center justify-between px-5 py-3 border-t border-gray-50 bg-gray-50/30">
+            <span className="text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">
+                Pág. {page} de {pages} · {total} registros
+            </span>
+            <div className="flex gap-1">
+                <button
+                    onClick={() => onPage(page - 1)}
+                    disabled={page === 1}
+                    className="w-7 h-7 rounded-lg border border-[#f1f5f9] bg-white text-[#64748b] text-xs font-black hover:bg-[#00a2e1] hover:text-white disabled:opacity-30 transition-all"
+                >‹</button>
+                {Array.from({ length: pages }, (_, i) => i + 1).filter(p => Math.abs(p - page) <= 2).map(p => (
+                    <button
+                        key={p}
+                        onClick={() => onPage(p)}
+                        className={`w-7 h-7 rounded-lg border text-[10px] font-black transition-all ${p === page ? 'bg-[#00a2e1] text-white border-[#00a2e1]' : 'border-[#f1f5f9] bg-white text-[#64748b] hover:bg-gray-50'}`}
+                    >{p}</button>
+                ))}
+                <button
+                    onClick={() => onPage(page + 1)}
+                    disabled={page === pages}
+                    className="w-7 h-7 rounded-lg border border-[#f1f5f9] bg-white text-[#64748b] text-xs font-black hover:bg-[#00a2e1] hover:text-white disabled:opacity-30 transition-all"
+                >›</button>
+            </div>
+        </div>
+    );
+}
+
 export default function Dashboard({ auth }) {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [pagePausas, setPagePausas] = useState(1);
 
     const [filters, setFilters] = useState({
         nombre: '',
@@ -34,6 +75,7 @@ export default function Dashboard({ auth }) {
 
     useEffect(() => {
         fetchStats();
+        setPagePausas(1);
     }, [filters]);
 
     if (loading) return (
@@ -60,8 +102,8 @@ export default function Dashboard({ auth }) {
             header={
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-gray-800">Panel de <span className="text-[#00a2e1]">Pausas</span></h2>
-                        <p className="text-sm text-gray-500">Monitoreo de Pausas Activas • LFH</p>
+                        <h2 className="text-2xl font-bold tracking-tight text-gray-800">Panel de <span className="text-[#00a2e1]">Bienestar</span></h2>
+                        <p className="text-sm text-gray-500">Pausas Activas · Gestión LFH</p>
                     </div>
                     <div className="flex flex-wrap justify-center gap-2">
                         <Link href={route('admin.colaboradores')} className="premium-button-secondary !py-2 !px-4 text-xs flex items-center gap-2">
@@ -80,7 +122,7 @@ export default function Dashboard({ auth }) {
                 </div>
             }
         >
-            <Head title="Pausas Activas" />
+            <Head title="Bienestar · Gestión LFH" />
 
             <div className="space-y-6 animate-fade-in-up">
 
@@ -218,7 +260,7 @@ export default function Dashboard({ auth }) {
                         <div className="premium-card !p-0 overflow-hidden bg-white">
                             <div className="px-5 py-3.5 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
                                 <h3 className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Registros Detallados</h3>
-                                <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Últimos 50</span>
+                                <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{stats.ultimos.length} registros</span>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">
@@ -231,7 +273,7 @@ export default function Dashboard({ auth }) {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
-                                        {stats.ultimos.map(reg => (
+                                        {stats.ultimos.slice((pagePausas - 1) * PER_PAGE, pagePausas * PER_PAGE).map(reg => (
                                             <tr key={reg.id} className="hover:bg-gray-50/50 transition-colors group">
                                                 <td className="py-3 px-5">
                                                     <div className="font-black text-gray-900 text-[12px] group-hover:text-[#00a2e1] transition-colors">{reg.nombre_empleado}</div>
@@ -244,7 +286,7 @@ export default function Dashboard({ auth }) {
                                                     <span className="text-[12px] font-black text-[#00a2e1] italic">{reg.duracion_minutos}′</span>
                                                 </td>
                                                 <td className="py-3 px-5 text-right">
-                                                    <div className="text-[10px] font-black text-gray-800">{new Date(reg.created_at).toLocaleDateString()}</div>
+                                                    <div className="text-[10px] font-black text-gray-800">{String(reg.created_at).slice(0,10).split('-').reverse().join('/')}</div>
                                                     <div className="text-[8px] text-[#94a3b8] font-bold">{new Date(reg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                                                 </td>
                                             </tr>
@@ -252,6 +294,7 @@ export default function Dashboard({ auth }) {
                                     </tbody>
                                 </table>
                             </div>
+                            <Paginador total={stats.ultimos.length} page={pagePausas} onPage={setPagePausas} />
                         </div>
                     </div>
 
