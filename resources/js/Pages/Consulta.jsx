@@ -86,8 +86,8 @@ export default function Consulta({ resultado, documento, fecha_inicio, fecha_fin
                 {!resultado && (
                     <div className="flex flex-col items-center justify-center py-24 text-center">
                         <div className="w-20 h-20 bg-[#e6f6fd] rounded-3xl flex items-center justify-center text-4xl mb-6 shadow-inner">🧘</div>
-                        <h2 className="text-2xl font-black text-[#1a202c] mb-2">Consulta tu participación</h2>
-                        <p className="text-[#64748b] text-sm max-w-xs">Ingresa tu número de documento en la barra de arriba para ver tu historial de bienestar e indicadores de gestión.</p>
+                        <h2 className="text-2xl font-black text-[#1a202c] mb-2">Consulta tu historial de gestión</h2>
+                        <p className="text-[#64748b] text-sm max-w-xs">Ingresa tu número de documento para ver tus pausas activas y los reportes de oportunidades de mejora asociados.</p>
                     </div>
                 )}
 

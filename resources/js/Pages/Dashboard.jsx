@@ -67,8 +67,7 @@ export default function Dashboard({ auth }) {
                 setStats(data);
                 setLoading(false);
             })
-            .catch(err => {
-                console.error("Error cargando stats:", err);
+            .catch(() => {
                 setLoading(false);
             });
     };

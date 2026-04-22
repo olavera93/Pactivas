@@ -72,7 +72,7 @@ export default function RegistroMejoras({ colaboradores = [], categorias = [] })
                         Reporte de <span className="text-[#00a3e0]">Oportunidades</span> de Mejora
                     </h1>
                     <p className="text-[#64748b] text-[15px] mt-2 max-w-xl mx-auto">
-                        Tu aporte es clave para mejorar nuestros procesos. Comparte lo que observas.
+                        Tu aporte es clave para mejorar nuestros procesos.
                     </p>
                 </div>
 
