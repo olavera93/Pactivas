@@ -27,7 +27,7 @@ Route::post('/consulta', [ConsultaController::class, 'buscar'])->name('consulta.
 Route::post('/api/registro', [RegistroController::class, 'store'])->name('registro.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', function () {
+    Route::get('/admin/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
 

@@ -190,7 +190,7 @@ export default function Registro({ colaboradores = [] }) {
 
             {/* Botón Admin Flotante */}
             <a
-                href="/dashboard"
+                href="/admin/dashboard"
                 className="fixed bottom-8 right-8 w-[55px] h-[55px] bg-white rounded-full flex items-center justify-center shadow-xl border-2 border-[#00a2e1] hover:scale-110 hover:rotate-6 hover:bg-[#00a2e1] group transition-all z-[1000]"
                 title="Acceso Administrador"
             >

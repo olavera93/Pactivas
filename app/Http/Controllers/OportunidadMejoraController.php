@@ -84,7 +84,7 @@ class OportunidadMejoraController extends Controller
             'por_estado'       => $registros->groupBy('estado')->map->count(),
 
             'por_categoria'    => $registros->groupBy('categoria')->map->count(),
-            'por_area'         => $registros->groupBy('area')->map->count(),
+            'por_area'         => $registros->groupBy('area_responsable')->map->count(),
             'total'            => $registros->count(),
             'hoy'              => OportunidadMejora::whereDate('created_at', today())->count(),
         ]);

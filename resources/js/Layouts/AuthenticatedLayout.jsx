@@ -1,23 +1,83 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import Dropdown from '@/Components/Dropdown';
-import NavLink from '@/Components/NavLink';
 import { Link, usePage, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 
-function SidebarLink({ href, active, children, icon }) {
+const icons = {
+    dashboard: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+    ),
+    colaboradores: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+    ),
+    rutinas: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+    ),
+    areas: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+    ),
+    indicadores: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+    ),
+    usuarios: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+    ),
+    perfil: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+    ),
+    salir: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+    ),
+    menu: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+    ),
+    close: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+    ),
+    chevronLeft: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+        </svg>
+    ),
+};
+
+function NavItem({ href, active, icon, collapsed, children }) {
     return (
         <Link
             href={href}
-            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 group ${
-                active 
-                    ? 'bg-[#00a2e1] text-white shadow-md shadow-[#00a2e1]/10' 
-                    : 'text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1a202c]'
+            title={collapsed ? children : undefined}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150 ${
+                collapsed ? 'justify-center' : ''
+            } ${
+                active
+                    ? 'bg-[#e8f4fd] text-[#0284c7] font-semibold'
+                    : 'text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b] font-medium'
             }`}
         >
-            <span className={`text-lg transition-transform group-hover:scale-110 ${active ? 'text-white' : 'text-[#00a2e1]/70'}`}>
-                {icon}
-            </span>
-            {children}
+            <span className={`shrink-0 ${active ? 'text-[#0284c7]' : 'text-[#94a3b8]'}`}>{icon}</span>
+            {!collapsed && <span className="flex-1 truncate">{children}</span>}
+            {!collapsed && active && <span className="w-1.5 h-1.5 rounded-full bg-[#0284c7] shrink-0" />}
         </Link>
     );
 }
@@ -25,6 +85,7 @@ function SidebarLink({ href, active, children, icon }) {
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sidebar-collapsed') === 'true');
     const { flash } = usePage().props;
     const [showFlash, setShowFlash] = useState(false);
 
@@ -36,125 +97,144 @@ export default function AuthenticatedLayout({ header, children }) {
         }
     }, [flash.success]);
 
+    const toggleCollapsed = () => {
+        setCollapsed(prev => {
+            localStorage.setItem('sidebar-collapsed', String(!prev));
+            return !prev;
+        });
+    };
+
     const navItems = [
-        { href: route('dashboard'), active: route().current('dashboard'), label: 'Bienestar', icon: '📊' },
-        { href: route('admin.colaboradores'), active: route().current('admin.colaboradores'), label: 'Colaboradores', icon: '👥' },
-        { href: route('admin.ejercicios'), active: route().current('admin.ejercicios'), label: 'Rutinas', icon: '⚡' },
-        { href: route('admin.departamentos'), active: route().current('admin.departamentos'), label: 'Áreas', icon: '🏢' },
-        { href: route('admin.indicadores'), active: route().current('admin.indicadores'), label: 'Indicadores', icon: '📈' },
-        ...(user.role === 'admin' ? [{ href: route('admin.usuarios'), active: route().current('admin.usuarios'), label: 'Usuarios', icon: '🔐' }] : []),
+        { href: route('dashboard'), active: route().current('dashboard'), label: 'Panel de control', icon: icons.dashboard },
+        { href: route('admin.colaboradores'), active: route().current('admin.colaboradores'), label: 'Colaboradores', icon: icons.colaboradores },
+        { href: route('admin.ejercicios'), active: route().current('admin.ejercicios'), label: 'Rutinas', icon: icons.rutinas },
+        { href: route('admin.departamentos'), active: route().current('admin.departamentos'), label: 'Áreas', icon: icons.areas },
+        { href: route('admin.indicadores'), active: route().current('admin.indicadores'), label: 'Indicadores', icon: icons.indicadores },
+        ...(user.role === 'admin' ? [{ href: route('admin.usuarios'), active: route().current('admin.usuarios'), label: 'Usuarios', icon: icons.usuarios }] : []),
     ];
 
-    return (
-        <div className="min-h-screen bg-[#f8fafc] font-['Outfit'] flex overflow-hidden">
-            {/* Flash Messages */}
-            <div className="fixed top-6 right-6 z-[200] flex flex-col gap-2 max-w-sm">
-                {showFlash && flash.success && (
-                    <div className="bg-white border-l-4 border-green-500 text-gray-800 px-5 py-3 rounded-xl shadow-xl flex items-center gap-3">
-                        <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center text-lg shrink-0">✅</div>
-                        <div className="font-bold text-xs">{flash.success}</div>
+    const Sidebar = ({ mobile = false }) => (
+        <div className="flex flex-col h-full">
+            {/* Logo + toggle */}
+            <div className={`flex items-center border-b border-[#f1f5f9] h-14 shrink-0 ${collapsed && !mobile ? 'justify-center px-3' : 'px-4 gap-3'}`}>
+                <Link href={route('dashboard')} className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 bg-[#0284c7] rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0">
+                        P
                     </div>
+                    {(!collapsed || mobile) && (
+                        <div className="min-w-0">
+                            <div className="text-sm font-bold text-[#0f172a] leading-tight">Pactivas</div>
+                            <div className="text-[10px] text-[#94a3b8] font-medium tracking-wide uppercase">Gestión LFH</div>
+                        </div>
+                    )}
+                </Link>
+                {!mobile && (
+                    <button
+                        onClick={toggleCollapsed}
+                        className={`ml-auto p-1.5 rounded-lg text-[#94a3b8] hover:bg-[#f1f5f9] hover:text-[#64748b] transition-colors shrink-0 ${collapsed ? 'rotate-180' : ''}`}
+                        title={collapsed ? 'Expandir' : 'Colapsar'}
+                    >
+                        {icons.chevronLeft}
+                    </button>
                 )}
             </div>
 
-            {/* Sidebar Desktop */}
-            <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-[#f1f5f9] h-screen sticky top-0 shrink-0 z-[100]">
-                <div className="p-6">
-                    {/* Espaciador superior */}
-                </div>
+            {/* Nav */}
+            <nav className="flex-1 px-2 py-4 overflow-y-auto space-y-0.5">
+                {(!collapsed || mobile) && (
+                    <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-widest px-3 mb-2">
+                        Administración
+                    </p>
+                )}
+                {navItems.map((item) => (
+                    <NavItem key={item.label} href={item.href} active={item.active} icon={item.icon} collapsed={collapsed && !mobile}>
+                        {item.label}
+                    </NavItem>
+                ))}
+            </nav>
 
-                <nav className="flex-1 px-3 space-y-1 mt-6">
-                    {navItems.map((item) => (
-                        <SidebarLink key={item.label} {...item}>
-                            {item.label}
-                        </SidebarLink>
-                    ))}
-                </nav>
-
-                <div className="p-3 mt-auto">
-                    <div className="bg-gray-50/50 rounded-2xl p-3 border border-gray-100">
-                        <Dropdown>
-                            <Dropdown.Trigger>
-                                <button className="w-full flex items-center gap-2.5 text-left group">
-                                    <div className="w-8 h-8 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-base shadow-sm group-hover:scale-105 transition-transform">
-                                        👤
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-[11px] font-black text-gray-900 truncate">{user.name}</div>
-                                        <div className="text-[9px] font-bold text-[#94a3b8] truncate">{user.email}</div>
-                                    </div>
-                                </button>
-                            </Dropdown.Trigger>
-                            <Dropdown.Content align="top" contentClasses="py-1 bg-white rounded-xl shadow-xl border border-gray-100 mb-2">
-                                <Dropdown.Link href={route('profile.edit')} className="flex items-center gap-2">
-                                    <span>👤</span> Mi Perfil
-                                </Dropdown.Link>
-                                <Dropdown.Link href={route('logout')} method="post" as="button" className="flex items-center gap-2 !text-red-500 hover:!bg-red-50 transition-colors">
-                                    <span>🚪</span> Salir del Sistema
-                                </Dropdown.Link>
-                            </Dropdown.Content>
-                        </Dropdown>
+            {/* User */}
+            <div className={`py-3 border-t border-[#f1f5f9] ${collapsed && !mobile ? 'px-2' : 'px-2'}`}>
+                {(!collapsed || mobile) && (
+                    <div className="flex items-center gap-3 px-3 py-2 mb-1">
+                        <div className="w-7 h-7 rounded-full bg-[#e8f4fd] flex items-center justify-center text-[#0284c7] shrink-0">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                            </svg>
+                        </div>
+                        <div className="min-w-0">
+                            <div className="text-xs font-semibold text-[#0f172a] truncate">{user.name}</div>
+                            <div className="text-[10px] text-[#94a3b8] truncate">{user.email}</div>
+                        </div>
                     </div>
-                </div>
-            </aside>
-
-            {/* Mobile Header */}
-            <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-b border-[#f1f5f9] z-[150] px-4 h-14 flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-2">
-                    <div className="w-7 h-7 bg-[#00a2e1] rounded-lg flex items-center justify-center text-white font-black text-sm">P</div>
-                    <span className="text-[11px] font-black text-gray-900 tracking-tighter">PACTIVAS ADMIN</span>
-                </Link>
-                <button 
-                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    className="p-1.5 text-[#00a2e1] bg-[#e6f6fd] rounded-lg"
+                )}
+                <NavItem href={route('profile.edit')} active={route().current('profile.edit')} icon={icons.perfil} collapsed={collapsed && !mobile}>
+                    Mi perfil
+                </NavItem>
+                <button
+                    onClick={() => router.post(route('logout'))}
+                    title={collapsed && !mobile ? 'Salir' : undefined}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-[#64748b] hover:bg-red-50 hover:text-red-500 transition-colors duration-150 ${collapsed && !mobile ? 'justify-center' : ''}`}
                 >
-                    {isMobileMenuOpen ? '✕' : '☰'}
+                    <span className="shrink-0 text-[#94a3b8]">{icons.salir}</span>
+                    {(!collapsed || mobile) && 'Salir'}
                 </button>
             </div>
+        </div>
+    );
 
-            {/* Mobile Menu Overlay */}
-            {isMobileMenuOpen && (
-                <div className="lg:hidden fixed inset-0 z-[140] bg-white pt-16 px-4 animate-in slide-in-from-top duration-300">
-                    <nav className="space-y-1 mt-4">
-                        {navItems.map((item) => (
-                            <SidebarLink key={item.label} {...item}>
-                                {item.label}
-                            </SidebarLink>
-                        ))}
-                        <div className="pt-6 border-t border-[#f1f5f9] mt-6">
-                             <SidebarLink href={route('profile.edit')} label="Perfil" icon="👤">Mi Perfil</SidebarLink>
-                             <button 
-                                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-black text-red-500 hover:bg-red-50 transition-all active:scale-95"
-                                onClick={() => router.post(route('logout'))}
-                             >
-                                <span className="text-lg">🚪</span> Salir del Sistema
-                             </button>
-                        </div>
-                    </nav>
+    return (
+        <div className="min-h-screen bg-[#f8fafc] flex overflow-hidden">
+
+            {/* Flash */}
+            {showFlash && flash.success && (
+                <div className="fixed top-5 right-5 z-[200] bg-white border border-green-200 text-gray-800 px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm">
+                    <span className="text-green-500">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </span>
+                    <span className="font-medium">{flash.success}</span>
                 </div>
             )}
 
-            {/* Main Content Area */}
+            {/* Sidebar Desktop */}
+            <aside
+                className={`hidden lg:flex flex-col bg-white border-r border-[#f1f5f9] h-screen sticky top-0 shrink-0 transition-all duration-200 ${collapsed ? 'w-14' : 'w-56'}`}
+            >
+                <Sidebar />
+            </aside>
+
+            {/* Mobile Header */}
+            <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-[#f1f5f9] z-[150] px-4 h-14 flex items-center justify-between">
+                <Link href={route('dashboard')} className="flex items-center gap-2">
+                    <div className="w-7 h-7 bg-[#0284c7] rounded-lg flex items-center justify-center text-white font-bold text-xs">P</div>
+                    <span className="text-sm font-bold text-[#0f172a]">Pactivas</span>
+                </Link>
+                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-1.5 text-[#64748b] hover:bg-[#f1f5f9] rounded-lg">
+                    {isMobileMenuOpen ? icons.close : icons.menu}
+                </button>
+            </div>
+
+            {/* Mobile Menu */}
+            {isMobileMenuOpen && (
+                <div className="lg:hidden fixed inset-0 z-[140] bg-white pt-14 overflow-y-auto">
+                    <Sidebar mobile />
+                </div>
+            )}
+
+            {/* Main */}
             <div className="flex-1 flex flex-col min-w-0 max-h-screen overflow-y-auto">
                 {header && (
-                    <header className="bg-white/40 backdrop-blur-md pt-16 lg:pt-6 pb-6 px-4 sm:px-6">
-                        <div className="max-w-7xl mx-auto">
-                            {header}
-                        </div>
+                    <header className="bg-white border-b border-[#f1f5f9] pt-14 lg:pt-0 px-6 py-5">
+                        {header}
                     </header>
                 )}
-
-                <main className={`flex-1 p-4 sm:p-6 animate-fade-in-up ${!header ? 'pt-20 lg:pt-6' : ''}`}>
+                <main className={`flex-1 p-6 ${!header ? 'pt-20 lg:pt-6' : ''}`}>
                     <div className="max-w-7xl mx-auto">
                         {children}
                     </div>
                 </main>
-
-                {/* Aesthetic Background Accents */}
-                <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10 opacity-20">
-                    <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#00a2e1]/5 rounded-full blur-[100px]" />
-                    <div className="absolute bottom-[-5%] left-[-10%] w-[30%] h-[30%] bg-[#00a2e1]/3 rounded-full blur-[100px]" />
-                </div>
             </div>
         </div>
     );

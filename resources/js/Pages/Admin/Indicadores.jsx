@@ -1,7 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
 
 const PER_PAGE = 10;
 
@@ -93,16 +92,20 @@ function BarChart({ data, colorFn }) {
     );
 }
 
-function ReporteItem({ r, onRevisar }) {
-    const [open, setOpen] = useState(false);
+function ReporteItem({ r, open, onToggle }) {
     const cfg = ESTADO_CONFIG[r.estado] || ESTADO_CONFIG.pendiente;
+    const form = useForm({ estado: r.estado, observacion_admin: r.observacion_admin || '' });
+
+    const guardar = (e) => {
+        e.stopPropagation();
+        form.patch(route('admin.indicadores.estado', r.id), { preserveScroll: true, preserveState: true });
+    };
 
     return (
         <>
-            {/* Fila principal de tabla */}
             <tr
                 className={`border-b border-gray-50 cursor-pointer transition-colors ${open ? 'bg-[#f0f9ff]' : 'hover:bg-gray-50/60'}`}
-                onClick={() => setOpen(o => !o)}
+                onClick={onToggle}
             >
                 <td className="py-3 px-4 w-8">
                     <svg className={`w-3.5 h-3.5 text-[#cbd5e1] transition-transform duration-300 ${open ? 'rotate-180 text-[#00a3e0]' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -135,54 +138,69 @@ function ReporteItem({ r, onRevisar }) {
                 </td>
             </tr>
 
-            {/* Fila de detalle expandible */}
             {open && (
                 <tr className="bg-[#f8fbff] border-b border-[#e6f6fd]">
-                    <td colSpan="8" className="px-8 py-5">
-                        <div className="space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pb-3 border-b border-gray-100">
-                                {[
-                                    { label: 'Reportado por', val: r.nombre_empleado },
-                                    { label: 'Responsable', val: r.nombre_responsable || '—' },
-                                    { label: 'Fecha caso', val: fmtFecha(r.fecha_caso) },
-                                    { label: 'Área', val: r.area_responsable || r.area },
-                                ].map(item => (
-                                    <div key={item.label}>
-                                        <div className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{item.label}</div>
-                                        <div className="font-bold text-gray-800 text-[11px]">{item.val}</div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div>
-                                <div className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Descripción</div>
-                                <p className="text-[13px] text-[#334155] font-medium leading-relaxed bg-white rounded-xl p-4 border border-gray-100 italic">
-                                    "{r.descripcion}"
-                                </p>
-                            </div>
-
-                            {r.observacion_admin && (
-                                <div>
-                                    <div className="text-[8px] font-black uppercase tracking-widest text-[#f59e0b] mb-1.5">Respuesta Administrativa</div>
-                                    <p className="text-[12px] text-[#92400e] leading-relaxed bg-[#fffbeb]/50 rounded-xl p-3 border border-[#fde68a]">{r.observacion_admin}</p>
+                    <td colSpan="8" className="px-6 py-5">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Columna izquierda: info + descripción */}
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    {[
+                                        { label: 'Reportado por', val: r.nombre_empleado },
+                                        { label: 'Responsable',   val: r.nombre_responsable || '—' },
+                                        { label: 'Fecha caso',    val: fmtFecha(r.fecha_caso) },
+                                        { label: 'Área',          val: r.area_responsable || r.area },
+                                    ].map(item => (
+                                        <div key={item.label}>
+                                            <div className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{item.label}</div>
+                                            <div className="font-semibold text-gray-800 text-[12px]">{item.val}</div>
+                                        </div>
+                                    ))}
                                 </div>
-                            )}
-
-                            <div className="flex items-center justify-between pt-1">
-                                {r.revisado_por ? (
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded-lg bg-[#e6f6fd] flex items-center justify-center text-xs shrink-0">👤</div>
-                                        <span className="text-[10px] text-[#64748b] font-bold">
-                                            Revisado por <span className="text-[#00a3e0]">{r.revisado_por}</span>
-                                            {r.fecha_revision && <span className="text-[#94a3b8] font-medium"> · {fmtFecha(r.fecha_revision)}</span>}
-                                        </span>
+                                <div>
+                                    <div className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Descripción</div>
+                                    <p className="text-[12px] text-[#334155] leading-relaxed bg-white rounded-lg p-3 border border-gray-100 italic">
+                                        "{r.descripcion}"
+                                    </p>
+                                </div>
+                                {r.revisado_por && (
+                                    <div className="text-[10px] text-[#64748b]">
+                                        Revisado por <span className="font-semibold text-[#00a3e0]">{r.revisado_por}</span>
+                                        {r.fecha_revision && <span className="text-[#94a3b8]"> · {fmtFecha(r.fecha_revision)}</span>}
                                     </div>
-                                ) : <span />}
+                                )}
+                            </div>
+
+                            {/* Columna derecha: formulario inline */}
+                            <div className="space-y-3" onClick={e => e.stopPropagation()}>
+                                <div>
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 block">Estado</label>
+                                    <select
+                                        className="premium-input !py-2 shadow-none border-[#f1f5f9] w-full"
+                                        value={form.data.estado}
+                                        onChange={e => form.setData('estado', e.target.value)}
+                                    >
+                                        <option value="pendiente">Pendiente</option>
+                                        <option value="confirmado">Confirmado</option>
+                                        <option value="no_confirmado">No Confirmado</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 block">Observación</label>
+                                    <textarea
+                                        className="premium-input !py-2 shadow-none border-[#f1f5f9] w-full resize-none"
+                                        rows={3}
+                                        placeholder="Comentario administrativo..."
+                                        value={form.data.observacion_admin}
+                                        onChange={e => form.setData('observacion_admin', e.target.value)}
+                                    />
+                                </div>
                                 <button
-                                    onClick={e => { e.stopPropagation(); onRevisar(r); }}
-                                    className="text-[10px] font-black text-[#00a3e0] uppercase tracking-widest hover:underline flex items-center gap-1.5"
+                                    onClick={guardar}
+                                    disabled={form.processing}
+                                    className="premium-button-primary !py-2 !px-4 text-xs w-full"
                                 >
-                                    <span>⚙️</span> Revisar Reporte
+                                    {form.processing ? 'Guardando...' : 'Guardar'}
                                 </button>
                             </div>
                         </div>
@@ -194,15 +212,14 @@ function ReporteItem({ r, onRevisar }) {
 }
 
 export default function Indicadores({ auth, stats, categorias = [] }) {
-    const [tab, setTab] = useState('indicadores');
-    const [modalData, setModalData] = useState(null);
+    const [tab, setTab] = useState('reportes');
     const [filtros, setFiltros] = useState({ estado: '', area: '', fecha_inicio: '', fecha_fin: '', nombre_responsable: '' });
     const [fechaInd, setFechaInd] = useState({ inicio: '', fin: '' });
     const [pageOp, setPageOp] = useState(1);
     const [showCatModal, setShowCatModal] = useState(false);
     const [editingCat, setEditingCat] = useState(null);
+    const [openReporteId, setOpenReporteId] = useState(null);
 
-    const estadoForm = useForm({ estado: '', observacion_admin: '' });
     const catForm = useForm({ nombre: '' });
     const catEditForm = useForm({ nombre: '' });
 
@@ -229,19 +246,6 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
         if (confirm('¿Eliminar esta categoría?')) {
             catEditForm.delete(route('admin.categorias.destroy', id));
         }
-    };
-
-    const abrirModal = (oportunidad) => {
-        setModalData(oportunidad);
-        estadoForm.setData({ estado: oportunidad.estado, observacion_admin: oportunidad.observacion_admin || '' });
-    };
-
-    const guardarEstado = () => {
-        estadoForm.patch(route('admin.indicadores.estado', modalData.id), {
-            preserveScroll: true,
-            preserveState:  true,
-            onSuccess: () => setModalData(null),
-        });
     };
 
     const exportar = () => {
@@ -291,7 +295,7 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
 
     const por_estado    = hayFiltroInd ? agrupar(registrosInd, 'estado')    : (stats.por_estado    || {});
     const por_categoria = hayFiltroInd ? agrupar(registrosInd, 'categoria') : (stats.por_categoria || {});
-    const por_area      = hayFiltroInd ? agrupar(registrosInd, 'area')      : (stats.por_area      || {});
+    const por_area      = hayFiltroInd ? agrupar(registrosInd, 'area_responsable') : (stats.por_area || {});
     const totalInd      = hayFiltroInd ? registrosInd.length                : (stats.total         || 0);
     const hoyInd        = hayFiltroInd
         ? registrosInd.filter(r => r.created_at.slice(0, 10) === new Date().toISOString().slice(0, 10)).length
@@ -464,17 +468,6 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                         </div>
                     </div>
 
-                    {/* Participación por área */}
-                    {Object.keys(por_area).length > 0 && (
-                        <div className="premium-card p-8">
-                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#64748b] mb-8 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-green-500" /> Rendimiento por Área
-                            </h3>
-                            <BarChart data={Object.fromEntries(
-                                Object.entries(por_area).sort((a, b) => b[1] - a[1])
-                            )} />
-                        </div>
-                    )}
                 </div>
             )}
 
@@ -576,7 +569,7 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                                         </thead>
                                         <tbody>
                                             {registrosFiltrados.slice((pageOp - 1) * PER_PAGE, pageOp * PER_PAGE).map(r => (
-                                                <ReporteItem key={r.id} r={r} onRevisar={abrirModal} />
+                                                <ReporteItem key={r.id} r={r} open={openReporteId === r.id} onToggle={() => setOpenReporteId(openReporteId === r.id ? null : r.id)} />
                                             ))}
                                         </tbody>
                                     </table>
@@ -586,65 +579,6 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                         )}
                     </div>
                 </div>
-            )}
-
-            {/* Modal revisar estado */}
-            {modalData && createPortal(
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[300] p-4">
-                    <div className="premium-card max-w-lg w-full shadow-2xl overflow-hidden border-[#f1f5f9]">
-                        <div className="p-8 border-b border-[#f1f5f9] bg-gradient-to-r from-[#e6f6fd] to-white flex justify-between items-start">
-                            <div>
-                                <h3 className="text-2xl font-black text-[#00a3e0] tracking-tight">Revisar Reporte</h3>
-                                <p className="text-[12px] font-bold text-[#64748b] mt-1 uppercase tracking-widest">Caso #{modalData.id} · {modalData.area}</p>
-                            </div>
-                            <button onClick={() => setModalData(null)} className="text-gray-400 hover:text-gray-600 transition-colors text-2xl font-light">✕</button>
-                        </div>
-                        <div className="p-8 space-y-6">
-                            <div className="bg-gray-50 rounded-2xl p-5 text-[13px] text-[#475569] leading-relaxed border border-gray-100 shadow-inner max-h-32 overflow-y-auto">
-                                <div className="text-[9px] font-black text-[#94a3b8] uppercase mb-1">Descripción del caso</div>
-                                {modalData.descripcion}
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-[#64748b] px-1">Cambiar Estado</label>
-                                <select
-                                    className="premium-input !py-3 !text-base shadow-sm"
-                                    value={estadoForm.data.estado}
-                                    onChange={e => estadoForm.setData('estado', e.target.value)}
-                                >
-                                    <option value="pendiente">⏳ Pendiente</option>
-                                    <option value="confirmado">✅ Confirmado</option>
-                                    <option value="no_confirmado">❌ No Confirmado</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-[#64748b] px-1">Observación Administrativa</label>
-                                <textarea
-                                    className="premium-input !py-3 min-h-[100px] resize-none shadow-sm"
-                                    placeholder="Detalla las acciones tomadas o comentarios sobre este caso..."
-                                    value={estadoForm.data.observacion_admin}
-                                    onChange={e => estadoForm.setData('observacion_admin', e.target.value)}
-                                />
-                                <p className="text-[9px] text-[#94a3b8] font-bold uppercase text-right">Visible para el administrador</p>
-                            </div>
-                        </div>
-                        <div className="p-8 border-t border-[#f1f5f9] flex gap-4 bg-gray-50/30">
-                            <button
-                                onClick={() => setModalData(null)}
-                                className="flex-1 premium-button-secondary"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={guardarEstado}
-                                disabled={estadoForm.processing}
-                                className="flex-1 premium-button-primary"
-                            >
-                                {estadoForm.processing ? 'Procesando...' : 'Guardar Cambios'}
-                            </button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
             )}
 
             {/* Modal Configurar Categorías */}
