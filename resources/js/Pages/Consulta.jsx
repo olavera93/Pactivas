@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 
 const ESTADO_CONFIG = {
@@ -40,7 +40,99 @@ function SectionHeader({ label, count, color = '#00a3e0' }) {
     );
 }
 
-export default function Consulta({ resultado, documento, fecha_inicio, fecha_fin }) {
+const HE_ESTADO = {
+    pendiente: { label: 'Pendiente', color: '#f59e0b', bg: '#fffbeb' },
+    aprobado:  { label: 'Aprobado',  color: '#16a34a', bg: '#f0fdf4' },
+    rechazado: { label: 'Rechazado', color: '#dc2626', bg: '#fef2f2' },
+};
+
+function FormHorasExtras({ nombreEmpleado, documento, colaboradores = [] }) {
+    const [fields, setFields] = useState({ fecha: '', horas: '', motivo: '' });
+    const [processing, setProcessing] = useState(false);
+    const [enviado, setEnviado]       = useState(false);
+    const [errors, setErrors]         = useState({});
+
+    const set = (k, v) => setFields(p => ({ ...p, [k]: v }));
+
+    const enviar = async (e) => {
+        e.preventDefault();
+        setProcessing(true);
+        setErrors({});
+        try {
+            await axios.post(route('horas-extras.store'), {
+                nombre_empleado:    nombreEmpleado || '',
+                documento_empleado: documento || '',
+                ...fields,
+                nombre_autorizador: '—',
+            });
+            setFields({ fecha: '', horas: '', motivo: '' });
+            setEnviado(true);
+            setTimeout(() => setEnviado(false), 4000);
+        } catch (err) {
+            if (err.response?.status === 422) setErrors(err.response.data.errors || {});
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    return (
+        <form onSubmit={enviar} className="space-y-3">
+            {enviado && (
+                <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-700 font-medium">
+                    Horas extras registradas correctamente.
+                </div>
+            )}
+            <div className="flex flex-col gap-1">
+                <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Fecha</label>
+                <input
+                    type="date"
+                    className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors text-[#475569]"
+                    value={fields.fecha}
+                    onChange={e => set('fecha', e.target.value)}
+                    required
+                />
+                {errors.fecha && <p className="text-red-500 text-xs">{errors.fecha[0]}</p>}
+            </div>
+
+            <div className="flex flex-col gap-1">
+                <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Cantidad de horas</label>
+                <input
+                    type="number"
+                    min="0.5" max="24" step="0.5"
+                    className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors"
+                    placeholder="Ej: 2.5"
+                    value={fields.horas}
+                    onChange={e => set('horas', e.target.value)}
+                    required
+                />
+                {errors.horas && <p className="text-red-500 text-xs">{errors.horas[0]}</p>}
+            </div>
+
+            <div className="flex flex-col gap-1">
+                <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Motivo</label>
+                <textarea
+                    className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors resize-none"
+                    rows={3}
+                    placeholder="Describe el motivo de las horas extras..."
+                    value={fields.motivo}
+                    onChange={e => set('motivo', e.target.value)}
+                    required
+                />
+                {errors.motivo && <p className="text-red-500 text-xs">{errors.motivo[0]}</p>}
+            </div>
+
+            <button
+                type="submit"
+                disabled={processing}
+                className="w-full py-2.5 bg-[#0284c7] text-white rounded-xl font-bold text-xs hover:bg-[#0369a1] transition-colors disabled:opacity-50"
+            >
+                {processing ? 'Registrando...' : 'Registrar horas extras'}
+            </button>
+        </form>
+    );
+}
+
+export default function Consulta({ resultado, documento, fecha_inicio, fecha_fin, colaboradores = [] }) {
     const { data, setData, post, processing, errors } = useForm({
         documento:    documento    || '',
         fecha_inicio: fecha_inicio || '',
@@ -168,29 +260,46 @@ export default function Consulta({ resultado, documento, fecha_inicio, fecha_fin
                             )}
                         </div>
 
-                        {/* KPIs pausas */}
-                        <div>
-                            <div className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-2 flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#0284c7] inline-block" /> Pausas activas
-                            </div>
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                                <KpiCard label="Total pausas"    value={resultado.total_pausas}  sub="Historial completo" color="#0284c7" />
-                                <KpiCard label="Minutos totales" value={resultado.total_minutos} sub="Tiempo acumulado"   color="#0ea5e9" />
-                                <KpiCard label="Este mes"        value={resultado.pausas_mes}    sub="Mes actual"         color="#8b5cf6" />
-                                <KpiCard label="Esta semana"     value={resultado.pausas_semana} sub="Semana actual"      color="#22c55e" />
-                            </div>
-                        </div>
+                        {/* KPIs + Formulario */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-                        {/* KPIs oportunidades */}
-                        <div>
-                            <div className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-2 flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-pink-400 inline-block" /> Oportunidades de mejora
+                            {/* Izquierda: KPIs comprimidos */}
+                            <div className="space-y-3">
+                                <div>
+                                    <div className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-2 flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#0284c7] inline-block" /> Pausas activas
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <KpiCard label="Total pausas"    value={resultado.total_pausas}  sub="Historial completo" color="#0284c7" />
+                                        <KpiCard label="Minutos totales" value={resultado.total_minutos} sub="Tiempo acumulado"   color="#0ea5e9" />
+                                        <KpiCard label="Este mes"        value={resultado.pausas_mes}    sub="Mes actual"         color="#8b5cf6" />
+                                        <KpiCard label="Esta semana"     value={resultado.pausas_semana} sub="Semana actual"      color="#22c55e" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-2 flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-pink-400 inline-block" /> Oportunidades de mejora
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <KpiCard label="Total reportes"  value={resultado.op_total}          sub="Historial completo" color="#64748b" />
+                                        <KpiCard label="Pendientes"      value={resultado.op_pendientes}     sub="Aguarda revisión"   color="#f59e0b" />
+                                        <KpiCard label="Confirmados"     value={resultado.op_confirmadas}    sub="Gestionados"        color="#16a34a" />
+                                        <KpiCard label="No confirmados"  value={resultado.op_no_confirmadas} sub="Sin confirmar"      color="#dc2626" />
+                                    </div>
+                                </div>
                             </div>
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                                <KpiCard label="Total reportes"  value={resultado.op_total}          sub="Historial completo" color="#64748b" />
-                                <KpiCard label="Pendientes"      value={resultado.op_pendientes}     sub="Aguarda revisión"   color="#f59e0b" />
-                                <KpiCard label="Confirmados"     value={resultado.op_confirmadas}    sub="Gestionados"        color="#16a34a" />
-                                <KpiCard label="No confirmados"  value={resultado.op_no_confirmadas} sub="Sin confirmar"      color="#dc2626" />
+
+                            {/* Derecha: Formulario horas extras */}
+                            <div className="bg-white rounded-xl border-2 border-[#8b5cf6]/20 p-5">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <span className="w-2 h-2 rounded-full bg-[#8b5cf6] inline-block" />
+                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-[#8b5cf6]">Registrar horas extras</h3>
+                                </div>
+                                <FormHorasExtras
+                                    nombreEmpleado={colab ? `${colab.nombres} ${colab.apellidos}` : ''}
+                                    documento={data.documento}
+                                    colaboradores={colaboradores}
+                                />
                             </div>
                         </div>
 
@@ -285,8 +394,10 @@ export default function Consulta({ resultado, documento, fecha_inicio, fecha_fin
                             </div>
 
                         </div>
+
                     </div>
                 )}
+
             </div>
         </div>
     );

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Colaborador;
+use App\Models\HoraExtra;
 use App\Models\OportunidadMejora;
 use App\Models\Registro;
 use Illuminate\Http\Request;
@@ -12,7 +13,13 @@ class ConsultaController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Consulta', ['resultado' => null, 'documento' => '', 'fecha_inicio' => '', 'fecha_fin' => '']);
+        return Inertia::render('Consulta', [
+            'resultado'     => null,
+            'documento'     => '',
+            'fecha_inicio'  => '',
+            'fecha_fin'     => '',
+            'colaboradores' => Colaborador::select('id', 'nombres', 'apellidos', 'area', 'documento')->orderBy('nombres')->get(),
+        ]);
     }
 
     public function buscar(Request $request)
@@ -68,11 +75,23 @@ class ConsultaController extends Controller
             'op_no_confirmadas' => $oportunidades->where('estado', 'no_confirmado')->count(),
         ];
 
+        $horasExtras = HoraExtra::where('documento_empleado', $doc)
+            ->when($fechaInicio, fn($q) => $q->whereDate('fecha', '>=', $fechaInicio))
+            ->when($fechaFin,    fn($q) => $q->whereDate('fecha', '<=', $fechaFin))
+            ->orderBy('fecha', 'desc')
+            ->get(['id', 'fecha', 'horas', 'motivo', 'nombre_autorizador', 'estado', 'observacion_admin', 'revisado_por', 'fecha_revision']);
+
+        $resultado['horas_extras']          = $horasExtras->values();
+        $resultado['he_total_horas']        = $horasExtras->sum('horas');
+        $resultado['he_pendientes']         = $horasExtras->where('estado', 'pendiente')->count();
+        $resultado['he_aprobadas_horas']    = $horasExtras->where('estado', 'aprobado')->sum('horas');
+
         return Inertia::render('Consulta', [
-            'resultado'    => $resultado,
-            'documento'    => $doc,
-            'fecha_inicio' => $fechaInicio,
-            'fecha_fin'    => $fechaFin,
+            'resultado'     => $resultado,
+            'documento'     => $doc,
+            'fecha_inicio'  => $fechaInicio,
+            'fecha_fin'     => $fechaFin,
+            'colaboradores' => Colaborador::select('id', 'nombres', 'apellidos', 'area', 'documento')->orderBy('nombres')->get(),
         ]);
     }
 }

@@ -30,6 +30,11 @@ const icons = {
             <line x1="6" y1="20" x2="6" y2="14"/>
         </svg>
     ),
+    horasExtras: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+        </svg>
+    ),
     usuarios: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -110,6 +115,7 @@ export default function AuthenticatedLayout({ header, children }) {
         { href: route('admin.ejercicios'), active: route().current('admin.ejercicios'), label: 'Rutinas', icon: icons.rutinas },
         { href: route('admin.departamentos'), active: route().current('admin.departamentos'), label: 'Áreas', icon: icons.areas },
         { href: route('admin.indicadores'), active: route().current('admin.indicadores'), label: 'Indicadores', icon: icons.indicadores },
+        { href: route('admin.horas-extras'), active: route().current('admin.horas-extras'), label: 'Horas Extras', icon: icons.horasExtras },
         ...(user.role === 'admin' ? [{ href: route('admin.usuarios'), active: route().current('admin.usuarios'), label: 'Usuarios', icon: icons.usuarios }] : []),
     ];
 

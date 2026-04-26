@@ -7,6 +7,7 @@ use App\Http\Controllers\ColaboradorController;
 use App\Http\Controllers\OportunidadMejoraController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ConsultaController;
+use App\Http\Controllers\HoraExtraController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -24,6 +25,7 @@ Route::post('/api/oportunidades', [OportunidadMejoraController::class, 'store'])
 Route::get('/ejercicios', [EjercicioController::class, 'index']);
 Route::get('/consulta', [ConsultaController::class, 'index'])->name('consulta');
 Route::post('/consulta', [ConsultaController::class, 'buscar'])->name('consulta.buscar');
+Route::post('/api/horas-extras', [HoraExtraController::class, 'store'])->name('horas-extras.store');
 Route::post('/api/registro', [RegistroController::class, 'store'])->name('registro.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -70,6 +72,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/admin/indicadores/{oportunidad}', [OportunidadMejoraController::class, 'updateEstado'])->name('admin.indicadores.estado');
     Route::get('/admin/indicadores/export', [OportunidadMejoraController::class, 'export'])->name('admin.indicadores.export');
     Route::get('/admin/indicadores/export-pdf', [OportunidadMejoraController::class, 'exportPdf'])->name('admin.indicadores.export.pdf');
+
+    // Horas Extras
+    Route::get('/admin/horas-extras', [HoraExtraController::class, 'adminIndex'])->name('admin.horas-extras');
+    Route::get('/admin/horas-extras/export', [HoraExtraController::class, 'export'])->name('admin.horas-extras.export');
+    Route::patch('/admin/horas-extras/{horaExtra}', [HoraExtraController::class, 'updateEstado'])->name('admin.horas-extras.estado');
 
     // Gestión de Usuarios
     Route::get('/admin/usuarios', [UserController::class, 'index'])->name('admin.usuarios');
