@@ -123,7 +123,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     </div>
                     {(!collapsed || mobile) && (
                         <div className="min-w-0">
-                            <div className="text-sm font-bold text-[#0f172a] leading-tight">Pactivas</div>
+                            <div className="text-sm font-bold text-[#0f172a] leading-tight">Gestión LFH</div>
                             <div className="text-[10px] text-[#94a3b8] font-medium tracking-wide uppercase">Gestión LFH</div>
                         </div>
                     )}
@@ -209,7 +209,7 @@ export default function AuthenticatedLayout({ header, children }) {
             <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-[#f1f5f9] z-[150] px-4 h-14 flex items-center justify-between">
                 <Link href={route('dashboard')} className="flex items-center gap-2">
                     <div className="w-7 h-7 bg-[#0284c7] rounded-lg flex items-center justify-center text-white font-bold text-xs">P</div>
-                    <span className="text-sm font-bold text-[#0f172a]">Pactivas</span>
+                    <span className="text-sm font-bold text-[#0f172a]">Gestión LFH</span>
                 </Link>
                 <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-1.5 text-[#64748b] hover:bg-[#f1f5f9] rounded-lg">
                     {isMobileMenuOpen ? icons.close : icons.menu}
@@ -230,10 +230,8 @@ export default function AuthenticatedLayout({ header, children }) {
                         {header}
                     </header>
                 )}
-                <main className={`flex-1 p-6 ${!header ? 'pt-20 lg:pt-6' : ''}`}>
-                    <div className="max-w-7xl mx-auto">
-                        {children}
-                    </div>
+                <main className={`flex-1 p-4 ${!header ? 'pt-20 lg:pt-4' : ''}`}>
+                    {children}
                 </main>
             </div>
         </div>

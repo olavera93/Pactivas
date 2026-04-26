@@ -1,36 +1,48 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
-const PER_PAGE = 10;
-
-function Paginador({ total, page, onPage }) {
-    const pages = Math.ceil(total / PER_PAGE);
-    if (pages <= 1) return null;
+function Paginador({ total, page, perPage, onPage, onPerPage }) {
+    const pages = Math.ceil(total / perPage);
     return (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-50 bg-gray-50/30">
-            <span className="text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">
-                Pág. {page} de {pages} · {total} registros
-            </span>
-            <div className="flex gap-1">
-                <button
-                    onClick={() => onPage(page - 1)}
-                    disabled={page === 1}
-                    className="w-7 h-7 rounded-lg border border-[#f1f5f9] bg-white text-[#64748b] text-xs font-black hover:bg-[#00a2e1] hover:text-white disabled:opacity-30 transition-all"
-                >‹</button>
-                {Array.from({ length: pages }, (_, i) => i + 1).filter(p => Math.abs(p - page) <= 2).map(p => (
-                    <button
-                        key={p}
-                        onClick={() => onPage(p)}
-                        className={`w-7 h-7 rounded-lg border text-[10px] font-black transition-all ${p === page ? 'bg-[#00a2e1] text-white border-[#00a2e1]' : 'border-[#f1f5f9] bg-white text-[#64748b] hover:bg-gray-50'}`}
-                    >{p}</button>
-                ))}
-                <button
-                    onClick={() => onPage(page + 1)}
-                    disabled={page === pages}
-                    className="w-7 h-7 rounded-lg border border-[#f1f5f9] bg-white text-[#64748b] text-xs font-black hover:bg-[#00a2e1] hover:text-white disabled:opacity-30 transition-all"
-                >›</button>
+        <div className="flex items-center justify-between px-4 py-2.5 border-t border-gray-50 bg-gray-50/30">
+            <div className="flex items-center gap-3">
+                <span className="text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">
+                    Pág. {page} de {Math.max(pages, 1)} · {total} registros
+                </span>
+                <select
+                    value={perPage}
+                    onChange={e => onPerPage(Number(e.target.value))}
+                    className="text-[9px] font-black text-[#64748b] border border-[#f1f5f9] rounded-lg px-2 py-1 bg-white"
+                >
+                    {[10, 25, 50, 100].map(n => (
+                        <option key={n} value={n}>Ver {n}</option>
+                    ))}
+                </select>
             </div>
+            {pages > 1 && (
+                <div className="flex gap-1">
+                    <button
+                        onClick={() => onPage(page - 1)}
+                        disabled={page === 1}
+                        className="w-7 h-7 rounded-lg border border-[#f1f5f9] bg-white text-[#64748b] text-xs font-black hover:bg-[#00a2e1] hover:text-white disabled:opacity-30 transition-all"
+                    >‹</button>
+                    {Array.from({ length: pages }, (_, i) => i + 1).filter(p => Math.abs(p - page) <= 2).map(p => (
+                        <button
+                            key={p}
+                            onClick={() => onPage(p)}
+                            className={`w-7 h-7 rounded-lg border text-[10px] font-black transition-all ${p === page ? 'bg-[#00a2e1] text-white border-[#00a2e1]' : 'border-[#f1f5f9] bg-white text-[#64748b] hover:bg-gray-50'}`}
+                        >{p}</button>
+                    ))}
+                    <button
+                        onClick={() => onPage(page + 1)}
+                        disabled={page === pages}
+                        className="w-7 h-7 rounded-lg border border-[#f1f5f9] bg-white text-[#64748b] text-xs font-black hover:bg-[#00a2e1] hover:text-white disabled:opacity-30 transition-all"
+                    >›</button>
+                </div>
+            )}
         </div>
     );
 }
@@ -70,7 +82,7 @@ function KpiCard({ label, value, sub, color = '#00a2e1', icon }) {
     );
 }
 
-function BarChart({ data, colorFn }) {
+function SimpleBar({ data, colorFn }) {
     const max = Math.max(...Object.values(data), 1);
     return (
         <div className="space-y-3">
@@ -107,76 +119,63 @@ function ReporteItem({ r, open, onToggle }) {
                 className={`border-b border-gray-50 cursor-pointer transition-colors ${open ? 'bg-[#f0f9ff]' : 'hover:bg-gray-50/60'}`}
                 onClick={onToggle}
             >
-                <td className="py-3 px-4 w-8">
+                <td className="py-2 px-4 w-8">
                     <svg className={`w-3.5 h-3.5 text-[#cbd5e1] transition-transform duration-300 ${open ? 'rotate-180 text-[#00a3e0]' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                     </svg>
                 </td>
-                <td className="py-3 px-3">
-                    <span className="text-[10px] font-bold text-[#0369a1] bg-[#e0f2fe] px-2 py-0.5 rounded font-mono">{r.no_orden || '—'}</span>
+                <td className="py-2 px-3">
+                    <span className="text-[10px] font-bold text-[#0369a1] bg-[#e0f2fe] px-2 py-0.5 rounded font-mono whitespace-nowrap">{r.no_orden || '—'}</span>
                 </td>
-                <td className="py-3 px-3">
-                    <div className="font-black text-[12px] text-gray-900 leading-tight">{r.nombre_responsable || '—'}</div>
-                    <div className="text-[9px] text-[#94a3b8] font-bold uppercase">{r.nombre_empleado}</div>
+                <td className="py-2 px-3">
+                    <div className="text-[12px] font-semibold text-gray-900 leading-tight">{r.nombre_responsable || '—'}</div>
                 </td>
-                <td className="py-3 px-3 hidden md:table-cell">
-                    <span className="text-[11px] text-gray-600 font-medium">{r.area_responsable || r.area}</span>
+                <td className="py-2 px-3">
+                    <div className="text-[11px] text-[#64748b]">{r.nombre_empleado}</div>
                 </td>
-                <td className="py-3 px-3 hidden lg:table-cell">
+                <td className="py-2 px-3">
+                    <span className="text-[11px] text-gray-600">{r.area_responsable || r.area}</span>
+                </td>
+                <td className="py-2 px-3 hidden md:table-cell">
                     <span className="text-[10px] font-black bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md uppercase tracking-widest">{r.categoria}</span>
                 </td>
-                <td className="py-3 px-3 hidden sm:table-cell">
-                    <span className="text-[11px] text-[#64748b] font-medium">{fmtFecha(r.fecha_caso)}</span>
+                <td className="py-2 px-3">
+                    <span className="text-[11px] text-[#64748b]">{fmtFecha(r.fecha_caso)}</span>
                 </td>
-                <td className="py-3 px-3">
-                    <span className="inline-flex items-center gap-1 text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-widest whitespace-nowrap" style={{ background: cfg.bg, color: cfg.color }}>
-                        {cfg.icon} {cfg.label}
+                <td className="py-2 px-3">
+                    <span className="text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest whitespace-nowrap" style={{ background: cfg.bg, color: cfg.color }}>
+                        {cfg.label}
                     </span>
                 </td>
-                <td className="py-3 px-3 hidden lg:table-cell">
-                    <span className="text-[10px] text-[#94a3b8] font-medium">{fmtFecha(r.created_at)}</span>
+                <td className="py-2 px-3 hidden md:table-cell">
+                    <span className="text-[10px] text-[#94a3b8]">{fmtFecha(r.created_at)}</span>
                 </td>
             </tr>
 
             {open && (
                 <tr className="bg-[#f8fbff] border-b border-[#e6f6fd]">
-                    <td colSpan="8" className="px-6 py-5">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Columna izquierda: info + descripción */}
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-3">
-                                    {[
-                                        { label: 'Reportado por', val: r.nombre_empleado },
-                                        { label: 'Responsable',   val: r.nombre_responsable || '—' },
-                                        { label: 'Fecha caso',    val: fmtFecha(r.fecha_caso) },
-                                        { label: 'Área',          val: r.area_responsable || r.area },
-                                    ].map(item => (
-                                        <div key={item.label}>
-                                            <div className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{item.label}</div>
-                                            <div className="font-semibold text-gray-800 text-[12px]">{item.val}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div>
-                                    <div className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Descripción</div>
-                                    <p className="text-[12px] text-[#334155] leading-relaxed bg-white rounded-lg p-3 border border-gray-100 italic">
-                                        "{r.descripcion}"
-                                    </p>
-                                </div>
+                    <td colSpan="9" className="px-6 py-4">
+                        <div className="space-y-3">
+                            {/* Descripción */}
+                            <div>
+                                <div className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Descripción</div>
+                                <p className="text-[12px] text-[#334155] leading-relaxed bg-white rounded-lg p-3 border border-gray-100 italic">
+                                    "{r.descripcion}"
+                                </p>
                                 {r.revisado_por && (
-                                    <div className="text-[10px] text-[#64748b]">
+                                    <div className="text-[10px] text-[#94a3b8] mt-1.5">
                                         Revisado por <span className="font-semibold text-[#00a3e0]">{r.revisado_por}</span>
-                                        {r.fecha_revision && <span className="text-[#94a3b8]"> · {fmtFecha(r.fecha_revision)}</span>}
+                                        {r.fecha_revision && <span> · {fmtFecha(r.fecha_revision)}</span>}
                                     </div>
                                 )}
                             </div>
 
-                            {/* Columna derecha: formulario inline */}
-                            <div className="space-y-3" onClick={e => e.stopPropagation()}>
-                                <div>
-                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 block">Estado</label>
+                            {/* Gestión */}
+                            <div className="flex gap-3 border-t border-[#e6f6fd] pt-3" onClick={e => e.stopPropagation()}>
+                            <div className="flex flex-col gap-1">
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Estado</label>
                                     <select
-                                        className="premium-input !py-2 shadow-none border-[#f1f5f9] w-full"
+                                        className="premium-input !py-2 shadow-none border-[#f1f5f9]"
                                         value={form.data.estado}
                                         onChange={e => form.setData('estado', e.target.value)}
                                     >
@@ -185,23 +184,25 @@ function ReporteItem({ r, open, onToggle }) {
                                         <option value="no_confirmado">No Confirmado</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 block">Observación</label>
+                                <div className="flex flex-col gap-1 flex-1">
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Observación</label>
                                     <textarea
-                                        className="premium-input !py-2 shadow-none border-[#f1f5f9] w-full resize-none"
-                                        rows={3}
+                                        className="premium-input !py-2 shadow-none border-[#f1f5f9] w-full resize-none flex-1"
+                                        rows={2}
                                         placeholder="Comentario administrativo..."
                                         value={form.data.observacion_admin}
                                         onChange={e => form.setData('observacion_admin', e.target.value)}
                                     />
                                 </div>
-                                <button
-                                    onClick={guardar}
-                                    disabled={form.processing}
-                                    className="premium-button-primary !py-2 !px-4 text-xs w-full"
-                                >
-                                    {form.processing ? 'Guardando...' : 'Guardar'}
-                                </button>
+                                <div className="flex flex-col justify-end">
+                                    <button
+                                        onClick={guardar}
+                                        disabled={form.processing}
+                                        className="premium-button-primary !py-2 !px-4 text-xs whitespace-nowrap"
+                                    >
+                                        {form.processing ? 'Guardando...' : 'Guardar'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </td>
@@ -216,6 +217,7 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
     const [filtros, setFiltros] = useState({ estado: '', area: '', fecha_inicio: '', fecha_fin: '', nombre_responsable: '' });
     const [fechaInd, setFechaInd] = useState({ inicio: '', fin: '' });
     const [pageOp, setPageOp] = useState(1);
+    const [perPage, setPerPage] = useState(25);
     const [showCatModal, setShowCatModal] = useState(false);
     const [editingCat, setEditingCat] = useState(null);
     const [openReporteId, setOpenReporteId] = useState(null);
@@ -249,24 +251,20 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
     };
 
     const exportar = () => {
-        const p = { ...filtros, fecha_inicio: toISO(filtros.fecha_inicio), fecha_fin: toISO(filtros.fecha_fin) };
-        window.location.href = `/admin/indicadores/export?${new URLSearchParams(p).toString()}`;
+        window.location.href = `/admin/indicadores/export?${new URLSearchParams(filtros).toString()}`;
     };
 
     const exportarPdf = () => {
-        const p = { ...filtros, fecha_inicio: toISO(filtros.fecha_inicio), fecha_fin: toISO(filtros.fecha_fin) };
-        window.location.href = `/admin/indicadores/export-pdf?${new URLSearchParams(p).toString()}`;
+        window.location.href = `/admin/indicadores/export-pdf?${new URLSearchParams(filtros).toString()}`;
     };
 
-    React.useEffect(() => { setPageOp(1); }, [filtros]);
+    React.useEffect(() => { setPageOp(1); }, [filtros, perPage]);
 
     const registrosFiltrados = (stats.registros || []).filter(r => {
         if (filtros.estado && r.estado !== filtros.estado) return false;
         if (filtros.area   && (r.area_responsable || r.area) !== filtros.area) return false;
-        const fi = toISO(filtros.fecha_inicio);
-        const ff = toISO(filtros.fecha_fin);
-        if (fi && r.created_at.slice(0, 10) < fi) return false;
-        if (ff && r.created_at.slice(0, 10) > ff) return false;
+        if (filtros.fecha_inicio && r.created_at.slice(0, 10) < filtros.fecha_inicio) return false;
+        if (filtros.fecha_fin   && r.created_at.slice(0, 10) > filtros.fecha_fin)   return false;
         if (filtros.nombre_responsable && !(r.nombre_responsable || '').toLowerCase().includes(filtros.nombre_responsable.toLowerCase())) return false;
         return true;
     });
@@ -341,99 +339,125 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
             <Head title="Indicadores de Mejora" />
 
             {/* ===== TAB: INDICADORES ===== */}
-            {tab === 'indicadores' && (
-                <div className="space-y-6 animate-fade-in-up">
+            {tab === 'indicadores' && (() => {
+                const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+                const fmtMes = ym => { const [y,m] = ym.split('-'); return `${MESES[+m-1]} ${y.slice(2)}`; };
 
-                    {/* Buscador + Rango de fecha */}
-                    <div className="premium-card p-4 flex flex-wrap items-end gap-4 bg-white">
-                        <div className="flex flex-col gap-1.5 flex-1 min-w-[180px]">
-                            <label className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] px-1">Buscar</label>
-                            <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-sm">🔍</span>
-                                <input
-                                    type="text"
-                                    className="premium-input !py-1.5 !pl-8 !pr-3 shadow-none border-[#f1f5f9] w-full"
-                                    placeholder="Responsable, área, categoría..."
-                                    value={fechaInd.buscar || ''}
-                                    onChange={e => setFechaInd(p => ({ ...p, buscar: e.target.value }))}
-                                />
-                            </div>
+                const tendenciaMap = registrosInd.reduce((acc, r) => {
+                    const k = r.created_at.slice(0, 7);
+                    acc[k] = (acc[k] || 0) + 1;
+                    return acc;
+                }, {});
+                const tendencia = Object.entries(tendenciaMap)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([k, v]) => ({ mes: fmtMes(k), total: v }));
+
+                const areaData = Object.entries(por_area)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 8);
+                const maxArea = Math.max(...areaData.map(([,v]) => v), 1);
+
+                return (
+                <div className="space-y-4 animate-fade-in-up">
+
+                    {/* Filtros */}
+                    <div className="premium-card p-3 flex flex-wrap items-end gap-2">
+                        <div className="flex flex-col gap-1 flex-1 min-w-[160px]">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Buscar</label>
+                            <input
+                                type="text"
+                                className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs"
+                                placeholder="Responsable, área, categoría..."
+                                value={fechaInd.buscar || ''}
+                                onChange={e => setFechaInd(p => ({ ...p, buscar: e.target.value }))}
+                            />
                         </div>
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] px-1">Área</label>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Área</label>
                             <select
-                                className="premium-input !py-1.5 !px-3 shadow-none border-[#f1f5f9]"
+                                className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs"
                                 value={fechaInd.area || ''}
                                 onChange={e => setFechaInd(p => ({ ...p, area: e.target.value }))}
                             >
                                 <option value="">Todas</option>
-                                {(stats.areas || []).map(a => (
-                                    <option key={a} value={a}>{a}</option>
-                                ))}
+                                {(stats.areas || []).map(a => <option key={a} value={a}>{a}</option>)}
                             </select>
                         </div>
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] px-1">Fecha Inicio</label>
-                            <input
-                                type="date"
-                                className="premium-input !py-1.5 !px-3 shadow-none border-[#f1f5f9]"
-                                value={fechaInd.inicio}
-                                onChange={e => setFechaInd(p => ({ ...p, inicio: e.target.value }))}
-                            />
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Desde</label>
+                            <input type="date" className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs" value={fechaInd.inicio} onChange={e => setFechaInd(p => ({ ...p, inicio: e.target.value }))} />
                         </div>
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] px-1">Fecha Fin</label>
-                            <input
-                                type="date"
-                                className="premium-input !py-1.5 !px-3 shadow-none border-[#f1f5f9]"
-                                value={fechaInd.fin}
-                                onChange={e => setFechaInd(p => ({ ...p, fin: e.target.value }))}
-                            />
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Hasta</label>
+                            <input type="date" className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs" value={fechaInd.fin} onChange={e => setFechaInd(p => ({ ...p, fin: e.target.value }))} />
                         </div>
                         {(hayFiltroInd || fechaInd.buscar) && (
-                            <button
-                                onClick={() => setFechaInd({ inicio: '', fin: '', area: '', buscar: '' })}
-                                className="text-[10px] font-black text-[#9e1a53] uppercase hover:underline mb-2"
-                            >
-                                Limpiar
-                            </button>
+                            <button onClick={() => setFechaInd({ inicio: '', fin: '', area: '', buscar: '' })} className="text-[9px] font-black text-[#94a3b8] hover:text-[#dc2626] transition-colors self-end mb-0.5">Limpiar</button>
                         )}
-                        <div className="ml-auto text-right">
+                        <div className="ml-auto text-right self-end">
                             <div className="text-[9px] font-black text-[#94a3b8] uppercase">Mostrando</div>
                             <div className="text-xs font-black text-[#00a3e0]">{totalInd} casos</div>
                         </div>
                     </div>
 
-                    {/* KPIs principales compactos */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* KPIs */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                         <KpiCard label="Total Reportes" value={totalInd} sub={hayFiltroInd ? 'Filtrado' : 'Total histórico'} color="#00a3e0" icon="📊" />
-                        <KpiCard label="Nuevos Hoy" value={hoyInd} sub="Registrados hoy" color="#0ea5e9" icon="✨" />
-                        <KpiCard label="Pendientes" value={por_estado.pendiente || 0} sub="Por revisar" color="#f59e0b" icon="⏳" />
-                        <KpiCard label="Confirmados" value={por_estado.confirmado || 0} sub="Finalizados" color="#22c55e" icon="🎯" />
+                        <KpiCard label="Nuevos Hoy"     value={hoyInd}   sub="Registrados hoy"  color="#0ea5e9" icon="✨" />
+                        <KpiCard label="Pendientes"     value={por_estado.pendiente || 0}  sub="Por revisar" color="#f59e0b" icon="⏳" />
+                        <KpiCard label="Confirmados"    value={por_estado.confirmado || 0} sub="Finalizados"  color="#22c55e" icon="🎯" />
                     </div>
 
-                    {/* Análisis: estado + categorías */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Distribución por estado */}
-                        <div className="premium-card p-8">
-                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#64748b] mb-8 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-[#00a3e0]" /> Estado Actual
+                    {/* Tendencia temporal */}
+                    <div className="premium-card p-5">
+                        <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-[#64748b] mb-4 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-[#00a3e0]" /> Tendencia por mes
+                        </h3>
+                        {tendencia.length === 0 ? (
+                            <div className="h-40 flex items-center justify-center text-[#94a3b8] italic text-sm">Sin datos en este rango.</div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height={180}>
+                                <BarChart data={tendencia} barSize={28} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                                    <XAxis dataKey="mes" tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 700 }} axisLine={false} tickLine={false} />
+                                    <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                                    <Tooltip
+                                        cursor={{ fill: '#f1f5f9' }}
+                                        contentStyle={{ border: '1px solid #f1f5f9', borderRadius: 8, fontSize: 11, fontWeight: 700 }}
+                                        formatter={v => [v, 'Registros']}
+                                    />
+                                    <Bar dataKey="total" radius={[4, 4, 0, 0]}>
+                                        {tendencia.map((_, i) => (
+                                            <Cell key={i} fill={i === tendencia.length - 1 ? '#00a3e0' : '#bfdbfe'} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        )}
+                    </div>
+
+                    {/* Estado + Categorías + Áreas */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+                        {/* Estado */}
+                        <div className="premium-card p-5">
+                            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-[#64748b] mb-5 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-[#00a3e0]" /> Por estado
                             </h3>
-                            <div className="space-y-6">
+                            <div className="space-y-4">
                                 {Object.entries(ESTADO_CONFIG).map(([key, cfg]) => {
                                     const val = por_estado[key] || 0;
                                     const pct = totalInd > 0 ? Math.round((val / totalInd) * 100) : 0;
                                     return (
-                                        <div key={key} className="group">
-                                            <div className="flex justify-between items-end text-[12px] mb-2">
-                                                <span className="font-black text-gray-800">{cfg.label}</span>
-                                                <div className="text-right">
-                                                    <span className="font-black text-[#64748b] mr-2">{val}</span>
-                                                    <span className="text-[10px] font-black px-1.5 py-0.5 bg-gray-100 rounded text-gray-400">{pct}%</span>
+                                        <div key={key}>
+                                            <div className="flex justify-between items-center text-[11px] mb-1.5">
+                                                <span className="font-bold text-gray-700">{cfg.label}</span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="font-black text-gray-800">{val}</span>
+                                                    <span className="text-[9px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-400 font-bold">{pct}%</span>
                                                 </div>
                                             </div>
-                                            <div className="h-2.5 bg-[#f1f5f9] rounded-full overflow-hidden p-[1px]">
-                                                <div className="h-full rounded-full transition-all duration-1000 shadow-sm" style={{ width: `${pct}%`, background: cfg.color }} />
+                                            <div className="h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
+                                                <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: cfg.color }} />
                                             </div>
                                         </div>
                                     );
@@ -441,108 +465,213 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                             </div>
                         </div>
 
-                        {/* Categorías más reportadas */}
-                        <div className="premium-card p-8 lg:col-span-2">
-                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#64748b] mb-8 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-pink-500" /> Categorías Top
+                        {/* Categorías */}
+                        <div className="premium-card p-5">
+                            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-[#64748b] mb-5 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-pink-400" /> Por categoría
                             </h3>
                             {Object.keys(por_categoria).length === 0 ? (
-                                <div className="h-48 flex items-center justify-center text-[#94a3b8] italic text-sm border-2 border-dashed border-gray-50 rounded-3xl">Sin datos aún en este rango.</div>
+                                <div className="h-32 flex items-center justify-center text-[#94a3b8] italic text-xs">Sin datos.</div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {Object.entries(por_categoria)
-                                        .sort((a, b) => b[1] - a[1])
-                                        .map(([cat, val]) => (
-                                            <div key={cat} className="flex items-center justify-between bg-gray-50/50 hover:bg-[#e6f6fd] border border-transparent hover:border-[#00a3e0]/20 rounded-2xl px-5 py-4 transition-all group">
-                                                <span className="text-[13px] font-black text-gray-700 group-hover:text-[#00a3e0]">{cat}</span>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-1 w-12 bg-gray-200 rounded-full overflow-hidden hidden sm:block">
-                                                        <div className="h-full bg-[#00a3e0] opacity-30" style={{ width: `${(val / totalInd) * 100}%` }} />
-                                                    </div>
-                                                    <span className="text-2xl font-black text-gray-900 group-hover:scale-110 transition-transform">{val}</span>
+                                <div className="space-y-3">
+                                    {Object.entries(por_categoria).sort((a,b) => b[1]-a[1]).map(([cat, val]) => {
+                                        const pct = totalInd > 0 ? Math.round((val / totalInd) * 100) : 0;
+                                        return (
+                                            <div key={cat}>
+                                                <div className="flex justify-between text-[11px] mb-1">
+                                                    <span className="font-bold text-gray-700 truncate">{cat}</span>
+                                                    <span className="font-black text-gray-800 ml-2">{val}</span>
+                                                </div>
+                                                <div className="h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
+                                                    <div className="h-full rounded-full transition-all duration-700 bg-pink-400" style={{ width: `${pct}%` }} />
                                                 </div>
                                             </div>
-                                        ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
+
+                        {/* Áreas */}
+                        <div className="premium-card p-5">
+                            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-[#64748b] mb-5 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-violet-400" /> Por área
+                            </h3>
+                            {areaData.length === 0 ? (
+                                <div className="h-32 flex items-center justify-center text-[#94a3b8] italic text-xs">Sin datos.</div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {areaData.map(([area, val]) => (
+                                        <div key={area}>
+                                            <div className="flex justify-between text-[11px] mb-1">
+                                                <span className="font-bold text-gray-700 truncate">{area || 'Sin área'}</span>
+                                                <span className="font-black text-gray-800 ml-2">{val}</span>
+                                            </div>
+                                            <div className="h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
+                                                <div className="h-full rounded-full transition-all duration-700 bg-violet-400" style={{ width: `${(val / maxArea) * 100}%` }} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
                     </div>
 
                 </div>
-            )}
+                );
+            })()}
 
             {/* ===== TAB: REPORTES ===== */}
             {tab === 'reportes' && (
                 <div className="space-y-6 animate-fade-in-up">
                     {/* Filtros */}
-                    <div className="premium-card p-6">
-                        <div className="flex justify-between items-center mb-6 border-b border-[#f1f5f9] pb-3">
-                            <span className="text-[9px] font-black uppercase tracking-widest text-[#64748b]">Filtros de Búsqueda</span>
-                            <span className="text-[10px] font-black text-[#00a3e0] bg-[#e6f6fd] px-2.5 py-1 rounded-lg">{registrosFiltrados.length} Resultados</span>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-                            <div className="lg:col-span-2">
-                                <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 block">Responsable</label>
-                                <input
-                                    type="text"
-                                    className="premium-input !py-2 shadow-none border-[#f1f5f9]"
-                                    placeholder="Buscar por nombre..."
-                                    value={filtros.nombre_responsable}
-                                    onChange={e => setFiltros(p => ({ ...p, nombre_responsable: e.target.value }))}
-                                />
-                            </div>
-                            <div>
-                                <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 block">Estado</label>
-                                <select
-                                    className="premium-input !py-2 shadow-none border-[#f1f5f9]"
-                                    value={filtros.estado}
-                                    onChange={e => setFiltros(p => ({ ...p, estado: e.target.value }))}
-                                >
-                                    <option value="">Todos</option>
-                                    <option value="pendiente">Pendiente</option>
-                                    <option value="confirmado">Confirmado</option>
-                                    <option value="no_confirmado">No Confirmado</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 block">Área</label>
-                                <select
-                                    className="premium-input !py-2 shadow-none border-[#f1f5f9]"
-                                    value={filtros.area}
-                                    onChange={e => setFiltros(p => ({ ...p, area: e.target.value }))}
-                                >
-                                    <option value="">Todas</option>
-                                    {(stats.areas || []).map(a => (
-                                        <option key={a} value={a}>{a}</option>
+                    {(() => {
+                        const hoy = () => new Date().toISOString().slice(0, 10);
+                        const inicioSemana = () => {
+                            const d = new Date();
+                            d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+                            return d.toISOString().slice(0, 10);
+                        };
+                        const inicioMes = () => {
+                            const d = new Date();
+                            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+                        };
+                        const inicioAnio = () => `${new Date().getFullYear()}-01-01`;
+
+                        const rangos = [
+                            { label: 'Hoy',        fi: hoy(),        ff: hoy() },
+                            { label: 'Esta semana', fi: inicioSemana(), ff: hoy() },
+                            { label: 'Este mes',   fi: inicioMes(),  ff: hoy() },
+                            { label: 'Este año',   fi: inicioAnio(), ff: hoy() },
+                        ];
+
+                        const FILTRO_LABELS = {
+                            nombre_responsable: { label: 'Responsable', fmt: v => v },
+                            estado:             { label: 'Estado',      fmt: v => v.replace('_', ' ') },
+                            area:               { label: 'Área',        fmt: v => v },
+                            fecha_inicio:       { label: 'Desde',       fmt: v => fmtFecha(v) },
+                            fecha_fin:          { label: 'Hasta',       fmt: v => fmtFecha(v) },
+                        };
+
+                        const chips = Object.entries(filtros)
+                            .filter(([, v]) => v)
+                            .map(([k, v]) => ({ key: k, text: `${FILTRO_LABELS[k].label}: ${FILTRO_LABELS[k].fmt(v)}` }));
+
+                        const rangoActivo = rangos.find(r =>
+                            r.fi === filtros.fecha_inicio && r.ff === filtros.fecha_fin
+                        )?.label;
+
+                        return (
+                            <div className="premium-card p-3 space-y-2">
+                                {/* Fila de inputs */}
+                                <div className="flex flex-wrap items-end gap-2">
+                                    <div className="flex flex-col gap-1 flex-1 min-w-[160px]">
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] px-0.5">Responsable</label>
+                                        <input
+                                            type="text"
+                                            className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs"
+                                            placeholder="Buscar por nombre..."
+                                            value={filtros.nombre_responsable}
+                                            onChange={e => setFiltros(p => ({ ...p, nombre_responsable: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] px-0.5">Estado</label>
+                                        <select
+                                            className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs"
+                                            value={filtros.estado}
+                                            onChange={e => setFiltros(p => ({ ...p, estado: e.target.value }))}
+                                        >
+                                            <option value="">Todos</option>
+                                            <option value="pendiente">Pendiente</option>
+                                            <option value="confirmado">Confirmado</option>
+                                            <option value="no_confirmado">No Confirmado</option>
+                                        </select>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] px-0.5">Área</label>
+                                        <select
+                                            className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs"
+                                            value={filtros.area}
+                                            onChange={e => setFiltros(p => ({ ...p, area: e.target.value }))}
+                                        >
+                                            <option value="">Todas</option>
+                                            {(stats.areas || []).map(a => (
+                                                <option key={a} value={a}>{a}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] px-0.5">Desde</label>
+                                        <input
+                                            type="date"
+                                            className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs"
+                                            value={filtros.fecha_inicio}
+                                            onChange={e => setFiltros(p => ({ ...p, fecha_inicio: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] px-0.5">Hasta</label>
+                                        <input
+                                            type="date"
+                                            className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs"
+                                            value={filtros.fecha_fin}
+                                            onChange={e => setFiltros(p => ({ ...p, fecha_fin: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="flex items-end gap-2 ml-auto">
+                                        <span className="text-[10px] font-black text-[#00a3e0] bg-[#e6f6fd] px-2.5 py-1.5 rounded-lg whitespace-nowrap">{registrosFiltrados.length} resultados</span>
+                                        <button onClick={exportar} className="premium-button-primary !py-1.5 !px-3 text-xs !bg-green-600 hover:!bg-green-700 shadow-none whitespace-nowrap">Excel</button>
+                                        <button onClick={exportarPdf} className="premium-button-primary !py-1.5 !px-3 text-xs !bg-red-600 hover:!bg-red-700 shadow-none whitespace-nowrap">PDF</button>
+                                    </div>
+                                </div>
+
+                                {/* Accesos rápidos de fecha */}
+                                <div className="flex items-center gap-1.5 border-t border-[#f1f5f9] pt-2">
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-[#cbd5e1] mr-1">Período</span>
+                                    {rangos.map(r => (
+                                        <button
+                                            key={r.label}
+                                            onClick={() => setFiltros(p => ({ ...p, fecha_inicio: r.fi, fecha_fin: r.ff }))}
+                                            className={`text-[9px] font-black px-2.5 py-1 rounded-md transition-all ${
+                                                rangoActivo === r.label
+                                                    ? 'bg-[#00a3e0] text-white'
+                                                    : 'bg-[#f1f5f9] text-[#64748b] hover:bg-[#e0f2fe] hover:text-[#00a3e0]'
+                                            }`}
+                                        >
+                                            {r.label}
+                                        </button>
                                     ))}
-                                </select>
-                            </div>
-                            <div className="lg:col-span-2 grid grid-cols-2 gap-2">
-                                <div>
-                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 block">Desde</label>
-                                    <input
-                                        type="date"
-                                        className="premium-input !py-2 shadow-none border-[#f1f5f9]"
-                                        value={filtros.fecha_inicio}
-                                        onChange={e => setFiltros(p => ({ ...p, fecha_inicio: e.target.value }))}
-                                    />
                                 </div>
-                                <div>
-                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 block">Hasta</label>
-                                    <input
-                                        type="date"
-                                        className="premium-input !py-2 shadow-none border-[#f1f5f9]"
-                                        value={filtros.fecha_fin}
-                                        onChange={e => setFiltros(p => ({ ...p, fecha_fin: e.target.value }))}
-                                    />
-                                </div>
+
+                                {/* Chips de filtros activos */}
+                                {chips.length > 0 && (
+                                    <div className="flex flex-wrap items-center gap-1.5 border-t border-[#f1f5f9] pt-2">
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-[#cbd5e1] mr-1">Activos</span>
+                                        {chips.map(c => (
+                                            <span
+                                                key={c.key}
+                                                className="inline-flex items-center gap-1 text-[9px] font-bold bg-[#e0f2fe] text-[#0369a1] px-2 py-0.5 rounded-full"
+                                            >
+                                                {c.text}
+                                                <button
+                                                    onClick={() => setFiltros(p => ({ ...p, [c.key]: '' }))}
+                                                    className="text-[#0369a1] hover:text-[#dc2626] font-black leading-none"
+                                                >×</button>
+                                            </span>
+                                        ))}
+                                        <button
+                                            onClick={() => setFiltros({ estado: '', area: '', fecha_inicio: '', fecha_fin: '', nombre_responsable: '' })}
+                                            className="text-[9px] font-black text-[#94a3b8] hover:text-[#dc2626] ml-1 transition-colors"
+                                        >
+                                            Limpiar todo
+                                        </button>
+                                    </div>
+                                )}
                             </div>
-                        </div>
-                        <div className="mt-4 flex gap-2 justify-end">
-                            <button onClick={exportar} className="premium-button-primary !py-2 !px-4 text-xs !bg-green-600 hover:!bg-green-700 shadow-none">Excel</button>
-                            <button onClick={exportarPdf} className="premium-button-primary !py-2 !px-4 text-xs !bg-red-600 hover:!bg-red-700 shadow-none">PDF</button>
-                        </div>
-                    </div>
+                        );
+                    })()}
 
                     <div className="premium-card !p-0 overflow-hidden bg-white">
                         {registrosFiltrados.length === 0 ? (
@@ -554,27 +683,39 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                         ) : (
                             <>
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left">
+                                    <table className="w-full text-left table-fixed">
+                                        <colgroup>
+                                            <col className="w-8" />
+                                            <col className="w-24" />
+                                            <col className="w-40" />
+                                            <col className="w-40" />
+                                            <col className="w-28" />
+                                            <col className="w-28 hidden md:table-column" />
+                                            <col className="w-24" />
+                                            <col className="w-28" />
+                                            <col className="w-24 hidden md:table-column" />
+                                        </colgroup>
                                         <thead>
                                             <tr className="bg-gray-50/80 border-b border-[#f1f5f9]">
-                                                <th className="py-3 px-4 w-8" />
-                                                <th className="py-3 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">Nº Orden</th>
-                                                <th className="py-3 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">Responsable / Reportado</th>
-                                                <th className="py-3 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest hidden md:table-cell">Área</th>
-                                                <th className="py-3 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest hidden lg:table-cell">Categoría</th>
-                                                <th className="py-3 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest hidden sm:table-cell">Fecha caso</th>
-                                                <th className="py-3 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">Estado</th>
-                                                <th className="py-3 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest hidden lg:table-cell">Registro</th>
+                                                <th className="py-2 px-4" />
+                                                <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest whitespace-nowrap">Nº Orden</th>
+                                                <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">Responsable</th>
+                                                <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">Reportado por</th>
+                                                <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">Área</th>
+                                                <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest hidden md:table-cell">Categoría</th>
+                                                <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">Fecha caso</th>
+                                                <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">Estado</th>
+                                                <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest hidden md:table-cell">Registro</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {registrosFiltrados.slice((pageOp - 1) * PER_PAGE, pageOp * PER_PAGE).map(r => (
+                                            {registrosFiltrados.slice((pageOp - 1) * perPage, pageOp * perPage).map(r => (
                                                 <ReporteItem key={r.id} r={r} open={openReporteId === r.id} onToggle={() => setOpenReporteId(openReporteId === r.id ? null : r.id)} />
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
-                                <Paginador total={registrosFiltrados.length} page={pageOp} onPage={setPageOp} />
+                                <Paginador total={registrosFiltrados.length} page={pageOp} perPage={perPage} onPage={setPageOp} onPerPage={setPerPage} />
                             </>
                         )}
                     </div>

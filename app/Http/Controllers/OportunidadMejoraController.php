@@ -157,7 +157,14 @@ class OportunidadMejoraController extends Controller
 
         $registros = $query->orderBy('created_at', 'desc')->get();
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.oportunidades', compact('registros'))
+        $filtros = [
+            'fecha_inicio' => $request->fecha_inicio,
+            'fecha_fin'    => $request->fecha_fin,
+            'area'         => $request->area,
+            'estado'       => $request->estado,
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.oportunidades', compact('registros', 'filtros'))
             ->setPaper('letter', 'landscape');
 
         return $pdf->download('oportunidades_mejora_' . now()->format('Ymd_His') . '.pdf');
