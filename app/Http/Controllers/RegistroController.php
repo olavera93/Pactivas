@@ -82,6 +82,12 @@ class RegistroController extends Controller
 
         $colaborador = $query->first();
 
+        if (!$colaborador) {
+            return redirect()->back()->withErrors([
+                'nombre_empleado' => 'El colaborador no existe en el sistema.'
+            ])->withInput();
+        }
+
         Registro::create([
             'nombre_empleado' => $request->nombre_empleado,
             'area' => $colaborador ? $colaborador->area : ($request->area ?? 'General'),

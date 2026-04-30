@@ -15,6 +15,7 @@ class HoraExtra extends Model
         'fecha',
         'horas',
         'motivo',
+        'nombre_autorizador',
         'estado',
         'observacion_admin',
         'revisado_por',
