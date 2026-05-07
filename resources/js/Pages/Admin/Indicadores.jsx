@@ -302,41 +302,33 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-gray-800">Indicadores de <span className="text-[#00a2e1]">Mejora</span></h2>
-                        <p className="text-sm text-gray-500">Métricas y reportes detallados del sistema</p>
-                    </div>
-                   
-                    <div className="flex items-center gap-2">
-                        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
-                            {[
-                                { key: 'indicadores', label: 'Resumen', icon: '📊' },
-                                { key: 'reportes',    label: 'Listado', icon: '📋' },
-                            ].map(t => (
-                                <button
-                                    key={t.key}
-                                    onClick={() => setTab(t.key)}
-                                    className={`px-4 py-2 rounded-lg text-[12px] font-black tracking-tight transition-all flex items-center gap-1.5 ${tab === t.key ? 'bg-white text-[#00a2e1] shadow-sm' : 'text-[#64748b] hover:text-[#1a202c]'}`}
-                                >
-                                    <span>{t.icon}</span>
-                                    {t.label}
-                                </button>
-                            ))}
-                        </div>
-                        <button
-                            onClick={() => setShowCatModal(true)}
-                            className="w-9 h-9 rounded-xl bg-white border border-[#f1f5f9] shadow-sm flex items-center justify-center text-[#64748b] hover:text-[#00a2e1] hover:border-[#00a2e1] transition-all"
-                            title="Configurar categorías"
-                        >
-                            ⚙️
-                        </button>
-                    </div>
-                </div>
-            }
         >
             <Head title="Indicadores de Mejora" />
+
+            <div className="flex items-center gap-2 mb-4">
+                <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+                    {[
+                        { key: 'indicadores', label: 'Resumen', icon: '📊' },
+                        { key: 'reportes',    label: 'Listado', icon: '📋' },
+                    ].map(t => (
+                        <button
+                            key={t.key}
+                            onClick={() => setTab(t.key)}
+                            className={`px-4 py-2 rounded-lg text-[12px] font-black tracking-tight transition-all flex items-center gap-1.5 ${tab === t.key ? 'bg-white text-[#00a2e1] shadow-sm' : 'text-[#64748b] hover:text-[#1a202c]'}`}
+                        >
+                            <span>{t.icon}</span>
+                            {t.label}
+                        </button>
+                    ))}
+                </div>
+                <button
+                    onClick={() => setShowCatModal(true)}
+                    className="w-9 h-9 rounded-xl bg-white border border-[#f1f5f9] shadow-sm flex items-center justify-center text-[#64748b] hover:text-[#00a2e1] hover:border-[#00a2e1] transition-all"
+                    title="Configurar categorías"
+                >
+                    ⚙️
+                </button>
+            </div>
 
             {/* ===== TAB: INDICADORES ===== */}
             {tab === 'indicadores' && (() => {

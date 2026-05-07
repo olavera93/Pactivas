@@ -59,21 +59,6 @@ export default function Usuarios({ auth, usuarios }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-gray-800">Control de <span className="text-[#00a2e1]">Usuarios</span></h2>
-                        <p className="text-sm text-gray-500">Gestión de acceso y permisos del sistema</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="text-right hidden sm:block">
-                            <div className="text-[9px] font-black text-[#94a3b8] uppercase tracking-widest leading-none mb-1">Total Usuarios</div>
-                            <div className="text-lg font-black text-[#00a2e1] leading-none">{usuarios.length}</div>
-                        </div>
-                        <div className="w-8 h-8 rounded-lg bg-white border border-[#f1f5f9] shadow-sm flex items-center justify-center text-lg">🔐</div>
-                    </div>
-                </div>
-            }
         >
             <Head title="Usuarios" />
 

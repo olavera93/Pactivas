@@ -35,6 +35,19 @@ const icons = {
             <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
         </svg>
     ),
+    documentos: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+        </svg>
+    ),
+    anuncios: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+    ),
     usuarios: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -110,12 +123,14 @@ export default function AuthenticatedLayout({ header, children }) {
     };
 
     const navItems = [
-        { href: route('dashboard'), active: route().current('dashboard'), label: 'Panel de control', icon: icons.dashboard },
+        { href: route('dashboard'), active: route().current('dashboard'), label: 'Pausas activas', icon: icons.dashboard },
         { href: route('admin.colaboradores'), active: route().current('admin.colaboradores'), label: 'Colaboradores', icon: icons.colaboradores },
         { href: route('admin.ejercicios'), active: route().current('admin.ejercicios'), label: 'Rutinas', icon: icons.rutinas },
         { href: route('admin.departamentos'), active: route().current('admin.departamentos'), label: 'Áreas', icon: icons.areas },
         { href: route('admin.indicadores'), active: route().current('admin.indicadores'), label: 'Indicadores', icon: icons.indicadores },
         { href: route('admin.horas-extras'), active: route().current('admin.horas-extras'), label: 'Horas Extras', icon: icons.horasExtras },
+        { href: route('admin.documentos'), active: route().current('admin.documentos'), label: 'Documentos', icon: icons.documentos },
+        { href: route('admin.anuncios'), active: route().current('admin.anuncios'), label: 'Anuncios', icon: icons.anuncios },
         ...(user.role === 'admin' ? [{ href: route('admin.usuarios'), active: route().current('admin.usuarios'), label: 'Usuarios', icon: icons.usuarios }] : []),
     ];
 

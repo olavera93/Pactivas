@@ -39,21 +39,6 @@ export default function Departamentos({ auth, departamentos }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-gray-800">Estructura <span className="text-[#00a2e1]">Organizacional</span></h2>
-                        <p className="text-sm text-gray-500">Gestión de áreas y departamentos de la empresa</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="text-right hidden sm:block">
-                            <div className="text-[9px] font-black text-[#94a3b8] uppercase tracking-widest leading-none mb-1">Total Áreas</div>
-                            <div className="text-lg font-black text-[#00a2e1] leading-none">{departamentos.length}</div>
-                        </div>
-                        <div className="w-8 h-8 rounded-lg bg-white border border-[#f1f5f9] shadow-sm flex items-center justify-center text-lg">🏢</div>
-                    </div>
-                </div>
-            }
         >
             <Head title="Departamentos" />
 

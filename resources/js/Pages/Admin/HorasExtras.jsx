@@ -170,14 +170,6 @@ export default function HorasExtras({ auth, registros = [], areas = [] }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-gray-800">Horas <span className="text-[#00a2e1]">Extras</span></h2>
-                        <p className="text-sm text-gray-500">Registro y gestión de horas adicionales</p>
-                    </div>
-                </div>
-            }
         >
             <Head title="Horas Extras" />
 

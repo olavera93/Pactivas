@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Anuncio;
 use App\Models\Colaborador;
+use App\Models\Documento;
 use App\Models\HoraExtra;
 use App\Models\OportunidadMejora;
 use App\Models\Registro;
@@ -19,6 +21,8 @@ class ConsultaController extends Controller
             'fecha_inicio'  => '',
             'fecha_fin'     => '',
             'colaboradores' => Colaborador::select('id', 'nombres', 'apellidos', 'area', 'documento')->orderBy('nombres')->get(),
+            'documentos'    => Documento::where('estado', true)->orderBy('created_at', 'desc')->get(['id', 'titulo', 'descripcion', 'archivo']),
+            'anuncio'       => Anuncio::where('activo', true)->first(),
         ]);
     }
 
@@ -92,6 +96,8 @@ class ConsultaController extends Controller
             'fecha_inicio'  => $fechaInicio,
             'fecha_fin'     => $fechaFin,
             'colaboradores' => Colaborador::select('id', 'nombres', 'apellidos', 'area', 'documento')->orderBy('nombres')->get(),
+            'documentos'    => Documento::where('estado', true)->orderBy('created_at', 'desc')->get(['id', 'titulo', 'descripcion', 'archivo']),
+            'anuncio'       => Anuncio::where('activo', true)->first(),
         ]);
     }
 }

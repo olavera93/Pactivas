@@ -80,7 +80,6 @@ export default function Dashboard({ auth }) {
     if (loading) return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Cargando...</h2>}
         >
             <div className="p-8 text-center text-gray-500 font-bold">Iniciando panel de control...</div>
         </AuthenticatedLayout>
@@ -89,7 +88,6 @@ export default function Dashboard({ auth }) {
     if (!stats) return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Error</h2>}
         >
             <div className="p-8 text-center text-red-500 font-bold">No se pudieron cargar las estadísticas. Revisa la conexión con la base de datos.</div>
         </AuthenticatedLayout>
@@ -98,28 +96,6 @@ export default function Dashboard({ auth }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-gray-800">Panel de <span className="text-[#00a2e1]">Bienestar</span></h2>
-                        <p className="text-sm text-gray-500">Pausas Activas · Gestión LFH</p>
-                    </div>
-                    <div className="flex flex-wrap justify-center gap-2">
-                        <Link href={route('admin.colaboradores')} className="premium-button-secondary !py-2 !px-4 text-xs flex items-center gap-2">
-                            👥 Personal
-                        </Link>
-                        <Link href={route('admin.ejercicios')} className="premium-button-secondary !py-2 !px-4 text-xs flex items-center gap-2">
-                            🧘‍♂️ Rutinas
-                        </Link>
-                        <a
-                            href={`/admin/exportar-reporte?${getQueryString()}`}
-                            className="premium-button-primary !py-2 !px-4 text-xs flex items-center gap-2"
-                        >
-                            📊 Exportar
-                        </a>
-                    </div>
-                </div>
-            }
         >
             <Head title="Bienestar · Gestión LFH" />
 

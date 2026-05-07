@@ -84,21 +84,6 @@ export default function Colaboradores({ auth, colaboradores, departamentos, impo
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-gray-800">Gestión de <span className="text-[#00a2e1]">Personal</span></h2>
-                        <p className="text-sm text-gray-500">Base de datos de empleados y áreas de trabajo</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="text-right hidden sm:block">
-                            <div className="text-[9px] font-black text-[#94a3b8] uppercase tracking-widest leading-none mb-1">Total Activos</div>
-                            <div className="text-lg font-black text-[#00a2e1] leading-none">{colaboradores.length}</div>
-                        </div>
-                        <div className="w-8 h-8 rounded-lg bg-white border border-[#f1f5f9] shadow-sm flex items-center justify-center text-lg">👥</div>
-                    </div>
-                </div>
-            }
         >
             <Head title="Colaboradores" />
 
