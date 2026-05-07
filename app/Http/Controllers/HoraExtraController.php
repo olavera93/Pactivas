@@ -17,7 +17,6 @@ class HoraExtraController extends Controller
             'fecha'             => 'required|date',
             'horas'             => 'required|numeric|min:0.5|max:24',
             'motivo'            => 'required|string|min:5',
-            'nombre_autorizador'=> 'required|string|max:150',
         ]);
 
         $area = null;
@@ -33,7 +32,6 @@ class HoraExtraController extends Controller
             'fecha'              => $request->fecha,
             'horas'              => $request->horas,
             'motivo'             => $request->motivo,
-            'nombre_autorizador' => $request->nombre_autorizador,
             'estado'             => 'pendiente',
         ]);
 

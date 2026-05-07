@@ -16,15 +16,11 @@ class OportunidadMejora extends Model
         'area_responsable',
         'fecha_caso',
         'documento_empleado',
-        'area',
         'categoria',
         'descripcion',
-
         'estado',
         'observacion_admin',
         'revisado_por',
         'fecha_revision',
-        'nombre_socializador',
-        'nombre_receptor',
     ];
 }

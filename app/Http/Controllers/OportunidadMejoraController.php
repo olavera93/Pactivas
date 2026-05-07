@@ -30,11 +30,8 @@ class OportunidadMejoraController extends Controller
             'documento_responsable'=> 'nullable|string|max:50',
             'area_responsable'     => 'nullable|string|max:100',
             'fecha_caso'           => 'required|date',
-            'area'               => 'required|string|max:100',
             'categoria'          => 'required|string|max:80',
             'descripcion'         => 'required|string|min:10',
-            'nombre_socializador' => 'nullable|string|max:150',
-            'nombre_receptor'     => 'nullable|string|max:150',
         ]);
 
         OportunidadMejora::create([
@@ -45,11 +42,8 @@ class OportunidadMejoraController extends Controller
             'area_responsable'     => $request->area_responsable,
             'fecha_caso'          => $request->fecha_caso,
             'documento_empleado'  => $request->documento_empleado,
-            'area'                => $request->area,
             'categoria'           => $request->categoria,
             'descripcion'         => $request->descripcion,
-            'nombre_socializador' => $request->nombre_socializador,
-            'nombre_receptor'     => $request->nombre_receptor,
             'estado'              => 'pendiente',
         ]);
 
@@ -70,7 +64,7 @@ class OportunidadMejoraController extends Controller
     {
         $query = OportunidadMejora::query();
 
-        if ($request->area)         $query->where('area', $request->area);
+        if ($request->area)         $query->where('area_responsable', $request->area);
         if ($request->categoria)    $query->where('categoria', $request->categoria);
         if ($request->estado)       $query->where('estado', $request->estado);
 
@@ -120,11 +114,12 @@ class OportunidadMejoraController extends Controller
     {
         $query = OportunidadMejora::query();
 
-        if ($request->ids)          $query->whereIn('id', $request->ids);
-        if ($request->area)         $query->where('area', $request->area);
-        if ($request->estado)       $query->where('estado', $request->estado);
-        if ($request->fecha_inicio) $query->whereDate('created_at', '>=', $request->fecha_inicio);
-        if ($request->fecha_fin)    $query->whereDate('created_at', '<=', $request->fecha_fin);
+        if ($request->ids)                $query->whereIn('id', $request->ids);
+        if ($request->area)               $query->where('area_responsable', $request->area);
+        if ($request->estado)             $query->where('estado', $request->estado);
+        if ($request->nombre_responsable) $query->where('nombre_responsable', 'like', '%' . $request->nombre_responsable . '%');
+        if ($request->fecha_inicio)       $query->whereDate('created_at', '>=', $request->fecha_inicio);
+        if ($request->fecha_fin)          $query->whereDate('created_at', '<=', $request->fecha_fin);
 
         $registros = $query->orderBy('created_at', 'desc')->get();
 
@@ -157,7 +152,7 @@ class OportunidadMejoraController extends Controller
     {
         $query = OportunidadMejora::query();
 
-        if ($request->area)         $query->where('area', $request->area);
+        if ($request->area)         $query->where('area_responsable', $request->area);
         if ($request->estado)       $query->where('estado', $request->estado);
         if ($request->nombre_responsable) $query->where('nombre_responsable', 'like', '%' . $request->nombre_responsable . '%');
         if ($request->fecha_inicio) $query->whereDate('created_at', '>=', $request->fecha_inicio);
@@ -187,7 +182,7 @@ class OportunidadMejoraController extends Controller
             'por_estado'    => $all->groupBy('estado')->map->count(),
 
             'por_categoria' => $all->groupBy('categoria')->map->count(),
-            'por_area'      => $all->groupBy('area')->map->count(),
+            'por_area'      => $all->groupBy('area_responsable')->map->count(),
             'registros'     => OportunidadMejora::orderBy('created_at', 'desc')->get(),
             'areas'         => Colaborador::select('area')->distinct()->pluck('area'),
         ];

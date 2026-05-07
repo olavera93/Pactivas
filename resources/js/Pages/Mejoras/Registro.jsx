@@ -14,7 +14,6 @@ export default function RegistroMejoras({ colaboradores = [], categorias = [] })
         area_responsable:      '',
         fecha_caso:            '',
         documento_empleado:    '',
-        area:                  '',
         categoria:             '',
         descripcion:           '',
     });
@@ -29,7 +28,6 @@ export default function RegistroMejoras({ colaboradores = [], categorias = [] })
 
     const isReady = data.nombre_empleado.length >= 3
         && data.fecha_caso
-        && data.area
         && data.categoria
         && data.descripcion.length >= 10;
 
@@ -227,7 +225,7 @@ export default function RegistroMejoras({ colaboradores = [], categorias = [] })
                                                 key={c.id}
                                                 className="flex items-center gap-2.5 px-3 py-2 hover:bg-[#f0f9ff] cursor-pointer border-b border-[#f8fafc] last:border-0"
                                                 onClick={() => {
-                                                    setData(p => ({ ...p, nombre_empleado: c.nombres + ' ' + c.apellidos, documento_empleado: c.documento || '', area: c.area }));
+                                                    setData(p => ({ ...p, nombre_empleado: c.nombres + ' ' + c.apellidos, documento_empleado: c.documento || '' }));
                                                     setShowReporta(false);
                                                 }}
                                             >

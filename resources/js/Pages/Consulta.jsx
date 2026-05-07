@@ -48,7 +48,6 @@ function FormHorasExtras({ nombreEmpleado, documento }) {
                 nombre_empleado:    nombreEmpleado || '',
                 documento_empleado: documento || '',
                 ...fields,
-                nombre_autorizador: '—',
             });
             setFields({ fecha: '', horas: '', motivo: '' });
             setEnviado(true);
