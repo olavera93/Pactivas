@@ -54,6 +54,7 @@ class HoraExtraController extends Controller
     {
         $query = HoraExtra::query();
 
+        if ($request->ids)          $query->whereIn('id', $request->ids);
         if ($request->nombre)       $query->where('nombre_empleado', 'like', '%' . $request->nombre . '%');
         if ($request->estado)       $query->where('estado', $request->estado);
         if ($request->area)         $query->where('area', $request->area);
@@ -82,16 +83,25 @@ class HoraExtraController extends Controller
         return \App\Helpers\SimpleXLSXGen::fromArray($data)->downloadAs('horas_extras_' . now()->format('Ymd_His') . '.xlsx');
     }
 
+    public function destroyMultiple(Request $request)
+    {
+        $request->validate(['ids' => 'required|array', 'ids.*' => 'integer']);
+        $count = HoraExtra::whereIn('id', $request->ids)->delete();
+        return redirect()->back()->with('success', "{$count} registros eliminados.");
+    }
+
     public function updateEstado(Request $request, HoraExtra $horaExtra)
     {
         $request->validate([
             'estado'           => 'required|in:pendiente,aprobado,rechazado',
             'observacion_admin'=> 'nullable|string|max:500',
+            'horas'            => 'required|numeric|min:0.5|max:24',
         ]);
 
         $horaExtra->update([
             'estado'            => $request->estado,
             'observacion_admin' => $request->observacion_admin,
+            'horas'             => $request->horas,
             'revisado_por'      => auth()->user()->name,
             'fecha_revision'    => now(),
         ]);

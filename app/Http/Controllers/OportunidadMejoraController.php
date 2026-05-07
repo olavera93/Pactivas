@@ -109,10 +109,18 @@ class OportunidadMejoraController extends Controller
     }
 
     // Exportar Excel
+    public function destroyMultiple(Request $request)
+    {
+        $request->validate(['ids' => 'required|array', 'ids.*' => 'integer']);
+        $count = OportunidadMejora::whereIn('id', $request->ids)->delete();
+        return redirect()->back()->with('success', "{$count} registros eliminados.");
+    }
+
     public function export(Request $request)
     {
         $query = OportunidadMejora::query();
 
+        if ($request->ids)          $query->whereIn('id', $request->ids);
         if ($request->area)         $query->where('area', $request->area);
         if ($request->estado)       $query->where('estado', $request->estado);
         if ($request->fecha_inicio) $query->whereDate('created_at', '>=', $request->fecha_inicio);

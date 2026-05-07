@@ -1,15 +1,19 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
 
 export default function Colaboradores({ auth, colaboradores, departamentos, importPreview, excelData }) {
+    const [tab, setTab]             = useState('colaboradores');
     const [search, setSearch]       = useState('');
+    const [searchArea, setSearchArea] = useState('');
     const [isEditing, setIsEditing] = useState(false);
+    const [isEditingArea, setIsEditingArea] = useState(false);
 
     const { data, setData, post, put, delete: destroy, processing, reset, errors } = useForm({
         id: null, documento: '', nombres: '', apellidos: '', area: '', activo: true,
     });
 
+    const areaForm = useForm({ id: null, nombre: '' });
     const previewForm = useForm({ excel_file: null });
     const syncForm    = useForm({ excelData: null });
 
@@ -36,6 +40,10 @@ export default function Colaboradores({ auth, colaboradores, departamentos, impo
         c.area.toLowerCase().includes(search.toLowerCase())
     );
 
+    const filteredAreas = departamentos.filter(d =>
+        d.nombre.toLowerCase().includes(searchArea.toLowerCase())
+    );
+
     const handleSubmit = (e) => {
         e.preventDefault();
         if (isEditing) {
@@ -52,167 +60,266 @@ export default function Colaboradores({ auth, colaboradores, departamentos, impo
         setIsEditing(true);
     };
 
-    const cancelEdit = () => { setIsEditing(false); reset(); };
+    const handleAreaSubmit = (e) => {
+        e.preventDefault();
+        if (isEditingArea) {
+            areaForm.put(route('admin.departamentos.update', areaForm.data.id), {
+                onSuccess: () => { setIsEditingArea(false); areaForm.reset(); },
+            });
+        } else {
+            areaForm.post(route('admin.departamentos.store'), { onSuccess: () => areaForm.reset() });
+        }
+    };
+
+    const editArea = (d) => {
+        areaForm.setData({ id: d.id, nombre: d.nombre });
+        setIsEditingArea(true);
+    };
 
     return (
         <AuthenticatedLayout user={auth.user}>
             <Head title="Colaboradores" />
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Tabs */}
+            <div className="flex gap-1 bg-[#f1f5f9] p-1 rounded-lg w-fit mb-4">
+                {[
+                    { key: 'colaboradores', label: `Colaboradores (${colaboradores.length})` },
+                    { key: 'areas',         label: `Áreas (${departamentos.length})` },
+                ].map(t => (
+                    <button key={t.key} onClick={() => setTab(t.key)}
+                        className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                            tab === t.key ? 'bg-white text-[#0284c7] shadow-sm' : 'text-[#64748b] hover:text-[#1e293b]'
+                        }`}>
+                        {t.label}
+                    </button>
+                ))}
+            </div>
 
-                {/* Sidebar formulario */}
-                <aside className="lg:col-span-3 lg:sticky lg:top-4 lg:self-start space-y-4">
+            {/* ===== TAB COLABORADORES ===== */}
+            {tab === 'colaboradores' && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
-                    {/* Formulario */}
-                    <div className="bg-white rounded-xl border border-[#e2e8f0] p-4">
-                        <h3 className="text-[10px] font-black uppercase tracking-widest text-[#64748b] mb-3 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-[#0284c7] inline-block" />
-                            {isEditing ? 'Editar colaborador' : 'Nuevo colaborador'}
-                        </h3>
-                        <form onSubmit={handleSubmit} className="space-y-2.5">
-                            <div className="flex flex-col gap-1">
-                                <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Documento</label>
-                                <input type="text" className="px-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors"
-                                    placeholder="Nº de documento" value={data.documento} onChange={e => setData('documento', e.target.value)} required />
-                                {errors.documento && <p className="text-red-500 text-[10px]">{errors.documento}</p>}
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Nombres</label>
-                                <input type="text" className="px-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors"
-                                    placeholder="Nombres" value={data.nombres} onChange={e => setData('nombres', e.target.value)} required />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Apellidos</label>
-                                <input type="text" className="px-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors"
-                                    placeholder="Apellidos" value={data.apellidos} onChange={e => setData('apellidos', e.target.value)} required />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Área</label>
-                                <select className="px-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors"
-                                    value={data.area} onChange={e => setData('area', e.target.value)} required>
-                                    <option value="">Seleccione...</option>
-                                    {departamentos?.map(d => <option key={d.id} value={d.nombre}>{d.nombre}</option>)}
-                                </select>
-                            </div>
-                            {isEditing && (
+                    <aside className="lg:col-span-3 lg:sticky lg:top-4 lg:self-start space-y-4">
+                        <div className="bg-white rounded-xl border border-[#e2e8f0] p-4">
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-[#64748b] mb-3 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-[#0284c7] inline-block" />
+                                {isEditing ? 'Editar colaborador' : 'Nuevo colaborador'}
+                            </h3>
+                            <form onSubmit={handleSubmit} className="space-y-2.5">
                                 <div className="flex flex-col gap-1">
-                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Estado</label>
-                                    <div className="flex gap-2">
-                                        {[{ val: true, label: 'Activo' }, { val: false, label: 'Inactivo' }].map(op => (
-                                            <button key={String(op.val)} type="button"
-                                                onClick={() => setData('activo', op.val)}
-                                                className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
-                                                    data.activo === op.val
-                                                        ? op.val ? 'bg-green-50 border-green-300 text-green-700' : 'bg-[#f1f5f9] border-[#e2e8f0] text-[#64748b]'
-                                                        : 'border-[#e2e8f0] text-[#94a3b8] hover:bg-[#f8fafc]'
-                                                }`}
-                                            >{op.label}</button>
-                                        ))}
-                                    </div>
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Documento</label>
+                                    <input type="text" className="px-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors"
+                                        placeholder="Nº de documento" value={data.documento} onChange={e => setData('documento', e.target.value)} required />
                                 </div>
-                            )}
-                            <div className="flex gap-2 pt-1">
-                                <button type="submit" disabled={processing}
-                                    className="flex-1 py-2 bg-[#0284c7] text-white rounded-lg font-bold text-xs hover:bg-[#0369a1] transition-colors disabled:opacity-50">
-                                    {processing ? 'Guardando...' : isEditing ? 'Guardar' : 'Registrar'}
-                                </button>
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Nombres</label>
+                                    <input type="text" className="px-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors"
+                                        placeholder="Nombres" value={data.nombres} onChange={e => setData('nombres', e.target.value)} required />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Apellidos</label>
+                                    <input type="text" className="px-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors"
+                                        placeholder="Apellidos" value={data.apellidos} onChange={e => setData('apellidos', e.target.value)} required />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Área</label>
+                                    <select className="px-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors"
+                                        value={data.area} onChange={e => setData('area', e.target.value)} required>
+                                        <option value="">Seleccione...</option>
+                                        {departamentos.map(d => <option key={d.id} value={d.nombre}>{d.nombre}</option>)}
+                                    </select>
+                                </div>
                                 {isEditing && (
-                                    <button type="button" onClick={cancelEdit}
-                                        className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-xs font-bold text-[#64748b] hover:bg-[#f1f5f9] transition-colors">
-                                        Cancelar
-                                    </button>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Estado</label>
+                                        <div className="flex gap-2">
+                                            {[{ val: true, label: 'Activo' }, { val: false, label: 'Inactivo' }].map(op => (
+                                                <button key={String(op.val)} type="button"
+                                                    onClick={() => setData('activo', op.val)}
+                                                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                                                        data.activo === op.val
+                                                            ? op.val ? 'bg-green-50 border-green-300 text-green-700' : 'bg-[#f1f5f9] border-[#e2e8f0] text-[#64748b]'
+                                                            : 'border-[#e2e8f0] text-[#94a3b8] hover:bg-[#f8fafc]'
+                                                    }`}>{op.label}</button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 )}
-                            </div>
-                        </form>
-                    </div>
-
-                    {/* Importar */}
-                    <div className="bg-white rounded-xl border border-[#e2e8f0] p-4">
-                        <h3 className="text-[10px] font-black uppercase tracking-widest text-[#64748b] mb-3 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-[#0284c7] inline-block" />
-                            Importar Excel
-                        </h3>
-                        <form onSubmit={handlePreview} className="space-y-2">
-                            <input type="file" accept=".xlsx,.xls" required
-                                className="w-full px-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs bg-[#f8fafc] file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-xs file:font-bold file:bg-[#e0f2fe] file:text-[#0369a1]"
-                                onChange={e => previewForm.setData('excel_file', e.target.files[0])} />
-                            <button type="submit" disabled={previewForm.processing}
-                                className="w-full py-2 bg-[#0284c7] text-white rounded-lg font-bold text-xs hover:bg-[#0369a1] transition-colors disabled:opacity-50">
-                                {previewForm.processing ? 'Procesando...' : 'Validar archivo'}
-                            </button>
-                        </form>
-                    </div>
-                </aside>
-
-                {/* Tabla */}
-                <div className="lg:col-span-9">
-                    <div className="bg-white rounded-xl border border-[#e2e8f0] overflow-hidden">
-                        <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center gap-3">
-                            <div className="relative flex-1 max-w-xs">
-                                <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#94a3b8]" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                                </svg>
-                                <input type="text" placeholder="Buscar por nombre, ID o área..."
-                                    className="w-full pl-8 pr-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors"
-                                    value={search} onChange={e => setSearch(e.target.value)} />
-                            </div>
-                            <span className="text-[10px] text-[#94a3b8] font-bold ml-auto">{filtered.length} de {colaboradores.length}</span>
-                            <a href={route('admin.colaboradores.export')}
-                                className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700 transition-colors whitespace-nowrap">
-                                Exportar
-                            </a>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="bg-[#f8fafc] border-b border-[#f1f5f9]">
-                                        <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest">Documento</th>
-                                        <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest">Colaborador</th>
-                                        <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest">Área</th>
-                                        <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest text-center">Estado</th>
-                                        <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest text-right">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-[#f8fafc]">
-                                    {filtered.length > 0 ? filtered.map(c => (
-                                        <tr key={c.id} className={`transition-colors ${c.activo === false ? 'opacity-50' : 'hover:bg-[#f8fafc]'}`}>
-                                            <td className="py-2 px-4">
-                                                <span className="text-[10px] font-mono text-[#94a3b8]">{c.documento || '—'}</span>
-                                            </td>
-                                            <td className="py-2 px-4">
-                                                <div className="text-xs font-semibold text-[#1e293b]">{c.nombres} {c.apellidos}</div>
-                                            </td>
-                                            <td className="py-2 px-4">
-                                                <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#e0f2fe] text-[#0369a1] font-bold">{c.area}</span>
-                                            </td>
-                                            <td className="py-2 px-4 text-center">
-                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${
-                                                    c.activo !== false ? 'bg-green-50 text-green-700' : 'bg-[#f1f5f9] text-[#94a3b8]'
-                                                }`}>
-                                                    {c.activo !== false ? 'Activo' : 'Inactivo'}
-                                                </span>
-                                            </td>
-                                            <td className="py-2 px-4 text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <button onClick={() => edit(c)} className="text-[10px] font-bold text-[#0284c7] hover:underline">Editar</button>
-                                                    <button onClick={() => { if (confirm('¿Eliminar este colaborador?')) destroy(route('admin.colaboradores.destroy', c.id)) }}
-                                                        className="text-[10px] font-bold text-red-500 hover:underline">Eliminar</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )) : (
-                                        <tr>
-                                            <td colSpan="5" className="py-16 text-center text-[#94a3b8] text-sm italic">No hay coincidencias.</td>
-                                        </tr>
+                                <div className="flex gap-2 pt-1">
+                                    <button type="submit" disabled={processing}
+                                        className="flex-1 py-2 bg-[#0284c7] text-white rounded-lg font-bold text-xs hover:bg-[#0369a1] transition-colors disabled:opacity-50">
+                                        {processing ? 'Guardando...' : isEditing ? 'Guardar' : 'Registrar'}
+                                    </button>
+                                    {isEditing && (
+                                        <button type="button" onClick={() => { setIsEditing(false); reset(); }}
+                                            className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-xs font-bold text-[#64748b] hover:bg-[#f1f5f9] transition-colors">
+                                            Cancelar
+                                        </button>
                                     )}
-                                </tbody>
-                            </table>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div className="bg-white rounded-xl border border-[#e2e8f0] p-4">
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-[#64748b] mb-3 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-[#0284c7] inline-block" />
+                                Importar Excel
+                            </h3>
+                            <form onSubmit={handlePreview} className="space-y-2">
+                                <input type="file" accept=".xlsx,.xls" required
+                                    className="w-full px-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs bg-[#f8fafc] file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-xs file:font-bold file:bg-[#e0f2fe] file:text-[#0369a1]"
+                                    onChange={e => previewForm.setData('excel_file', e.target.files[0])} />
+                                <button type="submit" disabled={previewForm.processing}
+                                    className="w-full py-2 bg-[#0284c7] text-white rounded-lg font-bold text-xs hover:bg-[#0369a1] transition-colors disabled:opacity-50">
+                                    {previewForm.processing ? 'Procesando...' : 'Validar archivo'}
+                                </button>
+                            </form>
+                        </div>
+                    </aside>
+
+                    <div className="lg:col-span-9">
+                        <div className="bg-white rounded-xl border border-[#e2e8f0] overflow-hidden">
+                            <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center gap-3">
+                                <div className="relative flex-1 max-w-xs">
+                                    <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#94a3b8]" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                                    </svg>
+                                    <input type="text" placeholder="Buscar por nombre, ID o área..."
+                                        className="w-full pl-8 pr-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors"
+                                        value={search} onChange={e => setSearch(e.target.value)} />
+                                </div>
+                                <span className="text-[10px] text-[#94a3b8] font-bold ml-auto">{filtered.length} de {colaboradores.length}</span>
+                                <a href={route('admin.colaboradores.export')}
+                                    className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700 transition-colors whitespace-nowrap">
+                                    Exportar
+                                </a>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="bg-[#f8fafc] border-b border-[#f1f5f9]">
+                                            <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest">Documento</th>
+                                            <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest">Colaborador</th>
+                                            <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest">Área</th>
+                                            <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest text-center">Estado</th>
+                                            <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest text-right">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#f8fafc]">
+                                        {filtered.length > 0 ? filtered.map(c => (
+                                            <tr key={c.id} className={`transition-colors ${c.activo === false ? 'opacity-50' : 'hover:bg-[#f8fafc]'}`}>
+                                                <td className="py-2 px-4"><span className="text-[10px] font-mono text-[#94a3b8]">{c.documento || '—'}</span></td>
+                                                <td className="py-2 px-4"><div className="text-xs font-semibold text-[#1e293b]">{c.nombres} {c.apellidos}</div></td>
+                                                <td className="py-2 px-4"><span className="text-[10px] px-2 py-0.5 rounded-md bg-[#e0f2fe] text-[#0369a1] font-bold">{c.area}</span></td>
+                                                <td className="py-2 px-4 text-center">
+                                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${c.activo !== false ? 'bg-green-50 text-green-700' : 'bg-[#f1f5f9] text-[#94a3b8]'}`}>
+                                                        {c.activo !== false ? 'Activo' : 'Inactivo'}
+                                                    </span>
+                                                </td>
+                                                <td className="py-2 px-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button onClick={() => edit(c)} className="text-[10px] font-bold text-[#0284c7] hover:underline">Editar</button>
+                                                        <button onClick={() => { if (confirm('¿Eliminar?')) destroy(route('admin.colaboradores.destroy', c.id)) }}
+                                                            className="text-[10px] font-bold text-red-500 hover:underline">Eliminar</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )) : (
+                                            <tr><td colSpan="5" className="py-16 text-center text-[#94a3b8] text-sm italic">No hay coincidencias.</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
-            {/* Modal preview importación */}
+            {/* ===== TAB ÁREAS ===== */}
+            {tab === 'areas' && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+                    <aside className="lg:col-span-3 lg:sticky lg:top-4 lg:self-start">
+                        <div className="bg-white rounded-xl border border-[#e2e8f0] p-4">
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-[#64748b] mb-3 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-[#0284c7] inline-block" />
+                                {isEditingArea ? 'Editar área' : 'Nueva área'}
+                            </h3>
+                            <form onSubmit={handleAreaSubmit} className="space-y-2.5">
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Nombre del área</label>
+                                    <input type="text" className="px-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors"
+                                        placeholder="Ej: Recursos Humanos" value={areaForm.data.nombre} onChange={e => areaForm.setData('nombre', e.target.value)} required />
+                                </div>
+                                <div className="flex gap-2 pt-1">
+                                    <button type="submit" disabled={areaForm.processing}
+                                        className="flex-1 py-2 bg-[#0284c7] text-white rounded-lg font-bold text-xs hover:bg-[#0369a1] transition-colors disabled:opacity-50">
+                                        {areaForm.processing ? 'Guardando...' : isEditingArea ? 'Guardar' : 'Registrar'}
+                                    </button>
+                                    {isEditingArea && (
+                                        <button type="button" onClick={() => { setIsEditingArea(false); areaForm.reset(); }}
+                                            className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-xs font-bold text-[#64748b] hover:bg-[#f1f5f9] transition-colors">
+                                            Cancelar
+                                        </button>
+                                    )}
+                                </div>
+                            </form>
+                        </div>
+                    </aside>
+
+                    <div className="lg:col-span-9">
+                        <div className="bg-white rounded-xl border border-[#e2e8f0] overflow-hidden">
+                            <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center gap-3">
+                                <div className="relative flex-1 max-w-xs">
+                                    <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#94a3b8]" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                                    </svg>
+                                    <input type="text" placeholder="Buscar área..."
+                                        className="w-full pl-8 pr-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors"
+                                        value={searchArea} onChange={e => setSearchArea(e.target.value)} />
+                                </div>
+                                <span className="text-[10px] text-[#94a3b8] font-bold ml-auto">{filteredAreas.length} áreas</span>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="bg-[#f8fafc] border-b border-[#f1f5f9]">
+                                            <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest">Área / Departamento</th>
+                                            <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest text-center">Colaboradores</th>
+                                            <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest text-right">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#f8fafc]">
+                                        {filteredAreas.length > 0 ? filteredAreas.map(d => (
+                                            <tr key={d.id} className="hover:bg-[#f8fafc] transition-colors">
+                                                <td className="py-2 px-4">
+                                                    <div className="text-xs font-semibold text-[#1e293b]">{d.nombre}</div>
+                                                </td>
+                                                <td className="py-2 px-4 text-center">
+                                                    <span className="text-xs font-black text-[#0284c7]">
+                                                        {colaboradores.filter(c => c.area === d.nombre).length}
+                                                    </span>
+                                                </td>
+                                                <td className="py-2 px-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button onClick={() => editArea(d)} className="text-[10px] font-bold text-[#0284c7] hover:underline">Editar</button>
+                                                        <button onClick={() => { if (confirm('¿Eliminar esta área?')) areaForm.delete(route('admin.departamentos.destroy', d.id)) }}
+                                                            className="text-[10px] font-bold text-red-500 hover:underline">Eliminar</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )) : (
+                                            <tr><td colSpan="3" className="py-16 text-center text-[#94a3b8] text-sm italic">No hay áreas registradas.</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal importación */}
             {importPreview && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
                     <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col">
@@ -220,7 +327,7 @@ export default function Colaboradores({ auth, colaboradores, departamentos, impo
                             <h3 className="font-bold text-sm text-[#0f172a]">Resumen de sincronización</h3>
                             <button onClick={() => window.location.reload()} className="text-[#94a3b8] hover:text-[#64748b]">✕</button>
                         </div>
-                        <div className="p-5 overflow-y-auto space-y-4">
+                        <div className="p-5 space-y-4">
                             <div className="grid grid-cols-3 gap-3">
                                 {[
                                     { label: 'Ingresos', value: importPreview.create.length, color: 'text-green-600', bg: 'bg-green-50' },

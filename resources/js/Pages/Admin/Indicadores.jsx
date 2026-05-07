@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -104,7 +104,7 @@ function SimpleBar({ data, colorFn }) {
     );
 }
 
-function ReporteItem({ r, open, onToggle }) {
+function ReporteItem({ r, open, onToggle, seleccionado, onSeleccionar }) {
     const cfg = ESTADO_CONFIG[r.estado] || ESTADO_CONFIG.pendiente;
     const form = useForm({ estado: r.estado, observacion_admin: r.observacion_admin || '' });
 
@@ -116,10 +116,14 @@ function ReporteItem({ r, open, onToggle }) {
     return (
         <>
             <tr
-                className={`border-b border-gray-50 cursor-pointer transition-colors ${open ? 'bg-[#f0f9ff]' : 'hover:bg-gray-50/60'}`}
+                className={`border-b border-gray-50 cursor-pointer transition-colors ${seleccionado ? 'bg-[#eff6ff]' : open ? 'bg-[#f0f9ff]' : 'hover:bg-gray-50/60'}`}
                 onClick={onToggle}
             >
-                <td className="py-2 px-4 w-8">
+                <td className="py-2 px-3 w-8" onClick={e => e.stopPropagation()}>
+                    <input type="checkbox" checked={!!seleccionado} onChange={onSeleccionar}
+                        className="rounded border-[#e2e8f0] text-[#0284c7] cursor-pointer" />
+                </td>
+                <td className="py-2 px-2 w-6">
                     <svg className={`w-3.5 h-3.5 text-[#cbd5e1] transition-transform duration-300 ${open ? 'rotate-180 text-[#00a3e0]' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -154,7 +158,7 @@ function ReporteItem({ r, open, onToggle }) {
 
             {open && (
                 <tr className="bg-[#f8fbff] border-b border-[#e6f6fd]">
-                    <td colSpan="9" className="px-6 py-4">
+                    <td colSpan="11" className="px-6 py-4">
                         <div className="space-y-3">
                             {/* Descripción */}
                             <div>
@@ -221,6 +225,26 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
     const [showCatModal, setShowCatModal] = useState(false);
     const [editingCat, setEditingCat] = useState(null);
     const [openReporteId, setOpenReporteId] = useState(null);
+    const [seleccionados, setSeleccionados] = useState([]);
+    const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+
+    const toggleSeleccion = (id) => setSeleccionados(prev =>
+        prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+    const toggleTodos = (ids) => setSeleccionados(prev =>
+        prev.length === ids.length ? [] : ids
+    );
+    const eliminarSeleccionados = () => {
+        router.delete(route('admin.indicadores.destroy-multiple'), {
+            data: { ids: seleccionados },
+            onSuccess: () => { setSeleccionados([]); setConfirmBulkDelete(false); },
+        });
+    };
+    const exportarSeleccionados = () => {
+        const params = new URLSearchParams();
+        seleccionados.forEach(id => params.append('ids[]', id));
+        window.location.href = `/admin/indicadores/export?${params.toString()}`;
+    };
 
     const catForm = useForm({ nombre: '' });
     const catEditForm = useForm({ nombre: '' });
@@ -612,8 +636,20 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                                             onChange={e => setFiltros(p => ({ ...p, fecha_fin: e.target.value }))}
                                         />
                                     </div>
-                                    <div className="flex items-end gap-2 ml-auto">
+                                    <div className="flex items-end gap-2 ml-auto flex-wrap">
                                         <span className="text-[10px] font-black text-[#00a3e0] bg-[#e6f6fd] px-2.5 py-1.5 rounded-lg whitespace-nowrap">{registrosFiltrados.length} resultados</span>
+                                        {seleccionados.length > 0 && (
+                                            <>
+                                                <button onClick={exportarSeleccionados}
+                                                    className="premium-button-primary !py-1.5 !px-3 text-xs !bg-green-600 hover:!bg-green-700 shadow-none whitespace-nowrap">
+                                                    Exportar {seleccionados.length}
+                                                </button>
+                                                <button onClick={() => setConfirmBulkDelete(true)}
+                                                    className="premium-button-primary !py-1.5 !px-3 text-xs !bg-red-500 hover:!bg-red-600 shadow-none whitespace-nowrap">
+                                                    Eliminar {seleccionados.length}
+                                                </button>
+                                            </>
+                                        )}
                                         <button onClick={exportar} className="premium-button-primary !py-1.5 !px-3 text-xs !bg-green-600 hover:!bg-green-700 shadow-none whitespace-nowrap">Excel</button>
                                         <button onClick={exportarPdf} className="premium-button-primary !py-1.5 !px-3 text-xs !bg-red-600 hover:!bg-red-700 shadow-none whitespace-nowrap">PDF</button>
                                     </div>
@@ -675,9 +711,10 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                         ) : (
                             <>
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left table-fixed">
+                                    <table className="w-full text-left">
                                         <colgroup>
                                             <col className="w-8" />
+                                            <col className="w-6" />
                                             <col className="w-24" />
                                             <col className="w-40" />
                                             <col className="w-40" />
@@ -689,7 +726,14 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                                         </colgroup>
                                         <thead>
                                             <tr className="bg-gray-50/80 border-b border-[#f1f5f9]">
-                                                <th className="py-2 px-4" />
+                                                <th className="py-2 px-3 w-8">
+                                                    <input type="checkbox"
+                                                        className="rounded border-[#e2e8f0] text-[#0284c7] cursor-pointer"
+                                                        checked={seleccionados.length === registrosFiltrados.slice((pageOp-1)*perPage, pageOp*perPage).length && registrosFiltrados.length > 0}
+                                                        onChange={() => toggleTodos(registrosFiltrados.slice((pageOp-1)*perPage, pageOp*perPage).map(r => r.id))}
+                                                    />
+                                                </th>
+                                                <th className="py-2 px-2 w-6" />
                                                 <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest whitespace-nowrap">Nº Orden</th>
                                                 <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">Responsable</th>
                                                 <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">Reportado por</th>
@@ -702,7 +746,12 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                                         </thead>
                                         <tbody>
                                             {registrosFiltrados.slice((pageOp - 1) * perPage, pageOp * perPage).map(r => (
-                                                <ReporteItem key={r.id} r={r} open={openReporteId === r.id} onToggle={() => setOpenReporteId(openReporteId === r.id ? null : r.id)} />
+                                                <ReporteItem key={r.id} r={r}
+                                                    open={openReporteId === r.id}
+                                                    onToggle={() => setOpenReporteId(openReporteId === r.id ? null : r.id)}
+                                                    seleccionado={seleccionados.includes(r.id)}
+                                                    onSeleccionar={() => toggleSeleccion(r.id)}
+                                                />
                                             ))}
                                         </tbody>
                                     </table>
@@ -801,6 +850,18 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                     </div>
                 </div>,
                 document.body
+            )}
+            {confirmBulkDelete && (
+                <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full space-y-4">
+                        <h3 className="font-bold text-[#0f172a] text-sm">¿Eliminar {seleccionados.length} registros?</h3>
+                        <p className="text-xs text-[#64748b]">Esta acción no se puede deshacer.</p>
+                        <div className="flex gap-2 justify-end">
+                            <button onClick={() => setConfirmBulkDelete(false)} className="px-4 py-2 text-xs font-bold text-[#64748b] hover:bg-[#f1f5f9] rounded-lg transition-colors">Cancelar</button>
+                            <button onClick={eliminarSeleccionados} className="px-4 py-2 text-xs font-bold bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">Sí, eliminar</button>
+                        </div>
+                    </div>
+                </div>
             )}
         </AuthenticatedLayout>
     );

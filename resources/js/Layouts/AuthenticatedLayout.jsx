@@ -129,9 +129,8 @@ export default function AuthenticatedLayout({ header, children }) {
 
     const navItems = [
         { href: route('dashboard'), active: route().current('dashboard'), label: 'Pausas activas', icon: icons.dashboard },
-        { href: route('admin.colaboradores'), active: route().current('admin.colaboradores'), label: 'Colaboradores', icon: icons.colaboradores },
+        { href: route('admin.colaboradores'), active: route().current('admin.colaboradores') || route().current('admin.departamentos'), label: 'Colaboradores', icon: icons.colaboradores },
         { href: route('admin.ejercicios'), active: route().current('admin.ejercicios'), label: 'Rutinas', icon: icons.rutinas },
-        { href: route('admin.departamentos'), active: route().current('admin.departamentos'), label: 'Áreas', icon: icons.areas },
         { href: route('admin.indicadores'), active: route().current('admin.indicadores'), label: 'Indicadores', icon: icons.indicadores },
         { href: route('admin.horas-extras'), active: route().current('admin.horas-extras'), label: 'Horas Extras', icon: icons.horasExtras },
         { href: route('admin.documentos'), active: route().current('admin.documentos'), label: 'Documentos', icon: icons.documentos },

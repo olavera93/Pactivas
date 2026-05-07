@@ -55,7 +55,8 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     }); // Evitar 405 al refrescar
     Route::post('/admin/colaboradores/import', [ColaboradorController::class, 'import'])->name('admin.colaboradores.import');
 
-    // Gestión de Departamentos
+    // Gestión de Departamentos (unificada en /colaboradores)
+    Route::get('/admin/departamentos', fn() => redirect()->route('admin.colaboradores'))->name('admin.departamentos.index');
     Route::resource('/admin/departamentos', \App\Http\Controllers\DepartamentoController::class)->names([
         'index' => 'admin.departamentos',
         'store' => 'admin.departamentos.store',
@@ -76,6 +77,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
 
     // Módulo Indicadores de Mejora (admin)
     Route::get('/admin/indicadores', [OportunidadMejoraController::class, 'adminIndex'])->name('admin.indicadores');
+    Route::delete('/admin/indicadores', [OportunidadMejoraController::class, 'destroyMultiple'])->name('admin.indicadores.destroy-multiple');
     Route::get('/admin/indicadores/stats', [OportunidadMejoraController::class, 'stats'])->name('admin.indicadores.stats');
     Route::patch('/admin/indicadores/{oportunidad}', [OportunidadMejoraController::class, 'updateEstado'])->name('admin.indicadores.estado');
     Route::get('/admin/indicadores/export', [OportunidadMejoraController::class, 'export'])->name('admin.indicadores.export');
@@ -84,6 +86,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     // Horas Extras
     Route::get('/admin/horas-extras', [HoraExtraController::class, 'adminIndex'])->name('admin.horas-extras');
     Route::get('/admin/horas-extras/export', [HoraExtraController::class, 'export'])->name('admin.horas-extras.export');
+    Route::delete('/admin/horas-extras', [HoraExtraController::class, 'destroyMultiple'])->name('admin.horas-extras.destroy-multiple');
     Route::patch('/admin/horas-extras/{horaExtra}', [HoraExtraController::class, 'updateEstado'])->name('admin.horas-extras.estado');
 
     // Gestión de Turnos
