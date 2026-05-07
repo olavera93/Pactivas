@@ -43,6 +43,11 @@ const icons = {
             <polyline points="10 9 9 9 8 9"/>
         </svg>
     ),
+    turnos: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+    ),
     anuncios: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -130,6 +135,7 @@ export default function AuthenticatedLayout({ header, children }) {
         { href: route('admin.indicadores'), active: route().current('admin.indicadores'), label: 'Indicadores', icon: icons.indicadores },
         { href: route('admin.horas-extras'), active: route().current('admin.horas-extras'), label: 'Horas Extras', icon: icons.horasExtras },
         { href: route('admin.documentos'), active: route().current('admin.documentos'), label: 'Documentos', icon: icons.documentos },
+        { href: route('admin.turnos'), active: route().current('admin.turnos'), label: 'Turnos', icon: icons.turnos },
         { href: route('admin.anuncios'), active: route().current('admin.anuncios'), label: 'Anuncios', icon: icons.anuncios },
         ...(user.role === 'admin' ? [{ href: route('admin.usuarios'), active: route().current('admin.usuarios'), label: 'Usuarios', icon: icons.usuarios }] : []),
     ];

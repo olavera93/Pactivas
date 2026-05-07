@@ -38,7 +38,7 @@ class ConsultaController extends Controller
         $fechaInicio = $request->fecha_inicio;
         $fechaFin    = $request->fecha_fin;
 
-        $colaborador = Colaborador::where('documento', $doc)->first();
+        $colaborador = Colaborador::where('documento', $doc)->where('activo', true)->first();
 
         $registros = Registro::where('documento_empleado', $doc)
             ->when($fechaInicio, fn($q) => $q->whereDate('created_at', '>=', $fechaInicio))

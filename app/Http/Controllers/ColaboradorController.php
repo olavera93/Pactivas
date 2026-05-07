@@ -33,10 +33,11 @@ class ColaboradorController extends Controller
     public function update(Request $request, Colaborador $colaborador)
     {
         $validated = $request->validate([
-            'nombres' => 'required|string|max:255',
+            'nombres'   => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
-            'area' => 'required|string|max:255',
+            'area'      => 'required|string|max:255',
             'documento' => 'nullable|string|max:20',
+            'activo'    => 'boolean',
         ]);
 
         $colaborador->update($validated);
@@ -47,6 +48,12 @@ class ColaboradorController extends Controller
     {
         $colaborador->delete();
         return redirect()->back();
+    }
+
+    public function toggleEstado(Colaborador $colaborador)
+    {
+        $colaborador->update(['activo' => !$colaborador->activo]);
+        return redirect()->back()->with('success', 'Estado actualizado.');
     }
 
     public function export()

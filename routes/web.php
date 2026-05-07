@@ -11,6 +11,7 @@ use App\Http\Controllers\HoraExtraController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\AnuncioController;
+use App\Http\Controllers\TurnoController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -46,6 +47,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::post('/admin/colaboradores', [ColaboradorController::class, 'store'])->name('admin.colaboradores.store');
     Route::put('/admin/colaboradores/{colaborador}', [ColaboradorController::class, 'update'])->name('admin.colaboradores.update');
     Route::delete('/admin/colaboradores/{colaborador}', [ColaboradorController::class, 'destroy'])->name('admin.colaboradores.destroy');
+    Route::patch('/admin/colaboradores/{colaborador}/estado', [ColaboradorController::class, 'toggleEstado'])->name('admin.colaboradores.estado');
     Route::get('/admin/colaboradores/export', [ColaboradorController::class, 'export'])->name('admin.colaboradores.export');
     Route::post('/admin/colaboradores/preview', [ColaboradorController::class, 'preview'])->name('admin.colaboradores.preview');
     Route::get('/admin/colaboradores/preview', function () {
@@ -83,6 +85,16 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/admin/horas-extras', [HoraExtraController::class, 'adminIndex'])->name('admin.horas-extras');
     Route::get('/admin/horas-extras/export', [HoraExtraController::class, 'export'])->name('admin.horas-extras.export');
     Route::patch('/admin/horas-extras/{horaExtra}', [HoraExtraController::class, 'updateEstado'])->name('admin.horas-extras.estado');
+
+    // Gestión de Turnos
+    Route::get('/admin/turnos', [TurnoController::class, 'index'])->name('admin.turnos');
+    Route::post('/admin/turnos', [TurnoController::class, 'store'])->name('admin.turnos.store');
+    Route::put('/admin/turnos/{turno}', [TurnoController::class, 'update'])->name('admin.turnos.update');
+    Route::delete('/admin/turnos/{turno}', [TurnoController::class, 'destroy'])->name('admin.turnos.destroy');
+    Route::delete('/admin/turnos', [TurnoController::class, 'destroyMultiple'])->name('admin.turnos.destroy-multiple');
+    Route::get('/admin/turnos/plantilla', [TurnoController::class, 'plantilla'])->name('admin.turnos.plantilla');
+    Route::post('/admin/turnos/import-preview', [TurnoController::class, 'importPreview'])->name('admin.turnos.import-preview');
+    Route::post('/admin/turnos/import', [TurnoController::class, 'import'])->name('admin.turnos.import');
 
     // Gestión de Anuncios
     Route::get('/admin/anuncios', [AnuncioController::class, 'index'])->name('admin.anuncios');

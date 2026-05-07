@@ -7,5 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Colaborador extends Model
 {
     //
-    protected $fillable = ['nombres', 'apellidos', 'area', 'documento'];
+    protected $fillable = ['nombres', 'apellidos', 'area', 'documento', 'activo'];
+
+    protected $casts = ['activo' => 'boolean'];
 }

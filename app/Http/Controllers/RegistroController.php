@@ -88,6 +88,12 @@ class RegistroController extends Controller
             ])->withInput();
         }
 
+        if (!$colaborador->activo) {
+            return redirect()->back()->withErrors([
+                'nombre_empleado' => 'Este colaborador está inactivo y no puede registrar pausas.'
+            ])->withInput();
+        }
+
         Registro::create([
             'nombre_empleado' => $request->nombre_empleado,
             'area' => $colaborador ? $colaborador->area : ($request->area ?? 'General'),
