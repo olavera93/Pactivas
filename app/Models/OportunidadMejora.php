@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\SerializesLocalDates;
 use Illuminate\Database\Eloquent\Model;
 
 class OportunidadMejora extends Model
 {
+    use SerializesLocalDates;
+
     protected $table = 'oportunidades_mejora';
 
     protected $fillable = [

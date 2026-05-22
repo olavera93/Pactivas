@@ -9,7 +9,7 @@ COPY . .
 RUN npm run build
 
 # Etapa 2: Aplicación PHP + Servidor Web
-FROM php:8.2-fpm-alpine
+FROM php:8.3-fpm-alpine
 
 # Instalar dependencias del sistema y extensiones de PHP necesarias
 RUN apk add --no-cache \

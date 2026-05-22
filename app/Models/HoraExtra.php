@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\SerializesLocalDates;
 use Illuminate\Database\Eloquent\Model;
 
 class HoraExtra extends Model
 {
+    use SerializesLocalDates;
+
     protected $table = 'horas_extras';
 
     protected $fillable = [

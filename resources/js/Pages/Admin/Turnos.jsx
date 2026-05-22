@@ -148,7 +148,7 @@ export default function Turnos({ turnos = { data: [], links: [], meta: {} }, tur
     const turnosFrom   = turnos.from      ?? 0;
     const turnosTo     = turnos.to        ?? 0;
     const lastPage     = turnos.last_page ?? 1;
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
     const [modalPlantilla, setModalPlantilla] = useState(false);
     const [plantillaForm, setPlantillaForm] = useState({ semana: todayStr, area: '' });
     const [editando, setEditando] = useState(null);
@@ -254,7 +254,7 @@ export default function Turnos({ turnos = { data: [], links: [], meta: {} }, tur
     const getWeekDays = (lunes) => Array.from({ length: 7 }, (_, i) => {
         const d = new Date(lunes + 'T12:00:00');
         d.setDate(d.getDate() + i);
-        return d.toISOString().slice(0, 10);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     });
 
     const [areaSemana, setAreaSemana] = useState('');
@@ -265,7 +265,7 @@ export default function Turnos({ turnos = { data: [], links: [], meta: {} }, tur
     const cambiarSemana = (dir) => {
         const d = new Date(lunesActual + 'T12:00:00');
         d.setDate(d.getDate() + dir * 7);
-        router.get(route('admin.turnos'), { semana_vista: d.toISOString().slice(0, 10) }, { preserveState: true, preserveScroll: true });
+        router.get(route('admin.turnos'), { semana_vista: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }, { preserveState: true, preserveScroll: true });
     };
 
     const turnosSemana = turnosVista;

@@ -320,7 +320,7 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
     const por_area      = hayFiltroInd ? agrupar(registrosInd, 'area_responsable') : (stats.por_area || {});
     const totalInd      = hayFiltroInd ? registrosInd.length                : (stats.total         || 0);
     const hoyInd        = hayFiltroInd
-        ? registrosInd.filter(r => r.created_at.slice(0, 10) === new Date().toISOString().slice(0, 10)).length
+        ? registrosInd.filter(r => { const d = new Date(); const hoy = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; return r.created_at.slice(0, 10) === hoy; }).length
         : (stats.hoy || 0);
 
     return (
@@ -543,11 +543,11 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                 <div className="space-y-6 animate-fade-in-up">
                     {/* Filtros */}
                     {(() => {
-                        const hoy = () => new Date().toISOString().slice(0, 10);
+                        const hoy = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
                         const inicioSemana = () => {
                             const d = new Date();
                             d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-                            return d.toISOString().slice(0, 10);
+                            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
                         };
                         const inicioMes = () => {
                             const d = new Date();

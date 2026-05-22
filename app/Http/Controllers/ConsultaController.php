@@ -83,7 +83,7 @@ class ConsultaController extends Controller
             ->when($fechaInicio, fn($q) => $q->whereDate('fecha', '>=', $fechaInicio))
             ->when($fechaFin,    fn($q) => $q->whereDate('fecha', '<=', $fechaFin))
             ->orderBy('fecha', 'desc')
-            ->get(['id', 'fecha', 'horas', 'motivo', 'nombre_autorizador', 'estado', 'observacion_admin', 'revisado_por', 'fecha_revision']);
+            ->get(['id', 'fecha', 'horas', 'motivo', 'estado', 'observacion_admin', 'revisado_por', 'fecha_revision']);
 
         $resultado['horas_extras']          = $horasExtras->values();
         $resultado['he_total_horas']        = $horasExtras->sum('horas');

@@ -170,7 +170,7 @@ export default function HorasExtras({ auth, registros = [], areas = [] }) {
     const pendientes     = filtrados.filter(r => r.estado === 'pendiente').length;
     const horasAprobadas = filtrados.filter(r => r.estado === 'aprobado').reduce((s, r) => s + parseFloat(r.horas), 0);
 
-    const hoy      = () => new Date().toISOString().slice(0, 10);
+    const hoy      = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
     const inicioMes  = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`; };
     const inicioAnio = () => `${new Date().getFullYear()}-01-01`;
     const rangos = [
