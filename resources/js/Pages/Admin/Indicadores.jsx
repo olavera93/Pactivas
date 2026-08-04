@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 
 function Paginador({ total, page, perPage, onPage, onPerPage }) {
     const pages = Math.ceil(total / perPage);
+    
     return (
         <div className="flex items-center justify-between px-4 py-2.5 border-t border-gray-50 bg-gray-50/30">
             <div className="flex items-center gap-3">
@@ -104,6 +105,117 @@ function SimpleBar({ data, colorFn }) {
     );
 }
 
+function CategoriaFiltro({ categorias, value, onChange }) {
+    const [open, setOpen] = useState(false);
+    const [query, setQuery] = useState('');
+    const ref = React.useRef(null);
+
+    React.useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (ref.current && !ref.current.contains(e.target)) {
+                setOpen(false);
+                setQuery('');
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const filtradas = query
+        ? categorias.filter(c => c.nombre.toLowerCase().includes(query.toLowerCase()))
+        : categorias;
+
+    const seleccionar = (nombre) => {
+        onChange(nombre);
+        setQuery('');
+        setOpen(false);
+    };
+
+    return (
+        <div className="relative" ref={ref}>
+            <input
+                type="text"
+                className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs w-40"
+                placeholder="Buscar categoría..."
+                value={open ? query : (value || '')}
+                onFocus={() => { setOpen(true); setQuery(''); }}
+                onChange={e => setQuery(e.target.value)}
+            />
+            {open && (
+                <div className="absolute z-50 mt-1 w-60 max-h-60 overflow-y-auto bg-white border border-[#e2e8f0] rounded-lg shadow-lg py-1">
+                    <button
+                        type="button"
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => seleccionar('')}
+                        className={`w-full text-left px-3 py-1.5 text-xs font-semibold hover:bg-[#f1f5f9] transition-colors ${!value ? 'bg-[#e0f2fe] text-[#0369a1]' : 'text-[#334155]'}`}
+                    >
+                        Todas
+                    </button>
+                    {filtradas.length === 0 && (
+                        <div className="px-3 py-2 text-xs text-[#94a3b8]">Sin resultados</div>
+                    )}
+                    {filtradas.map(c => (
+                        <button
+                            key={c.id}
+                            type="button"
+                            onMouseDown={e => e.preventDefault()}
+                            onClick={() => seleccionar(c.nombre)}
+                            className={`w-full text-left px-3 py-1.5 text-xs font-semibold hover:bg-[#f1f5f9] transition-colors ${value === c.nombre ? 'bg-[#e0f2fe] text-[#0369a1]' : 'text-[#334155]'}`}
+                        >
+                            {c.nombre}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function ResponsableFiltro({ opciones, value, onChange }) {
+    const [open, setOpen] = useState(false);
+    const ref = React.useRef(null);
+
+    React.useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const sugerencias = value
+        ? opciones.filter(o => o.toLowerCase().includes(value.toLowerCase()) && o.toLowerCase() !== value.toLowerCase()).slice(0, 8)
+        : opciones.slice(0, 8);
+
+    return (
+        <div className="relative" ref={ref}>
+            <input
+                type="text"
+                className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs w-full"
+                placeholder="Buscar por nombre..."
+                value={value}
+                onFocus={() => setOpen(true)}
+                onChange={e => { onChange(e.target.value); setOpen(true); }}
+            />
+            {open && sugerencias.length > 0 && (
+                <div className="absolute z-50 mt-1 w-full max-h-52 overflow-y-auto bg-white border border-[#e2e8f0] rounded-lg shadow-lg py-1">
+                    {sugerencias.map(s => (
+                        <button
+                            key={s}
+                            type="button"
+                            onMouseDown={e => e.preventDefault()}
+                            onClick={() => { onChange(s); setOpen(false); }}
+                            className="w-full text-left px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#f1f5f9] transition-colors"
+                        >
+                            {s}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function ReporteItem({ r, open, onToggle, seleccionado, onSeleccionar }) {
     const cfg = ESTADO_CONFIG[r.estado] || ESTADO_CONFIG.pendiente;
     const form = useForm({ estado: r.estado, observacion_admin: r.observacion_admin || '' });
@@ -176,7 +288,7 @@ function ReporteItem({ r, open, onToggle, seleccionado, onSeleccionar }) {
 
                             {/* Gestión */}
                             <div className="flex gap-3 border-t border-[#e6f6fd] pt-3" onClick={e => e.stopPropagation()}>
-                            <div className="flex flex-col gap-1">
+                                <div className="flex flex-col gap-1">
                                     <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Estado</label>
                                     <select
                                         className="premium-input !py-2 shadow-none border-[#f1f5f9]"
@@ -218,7 +330,7 @@ function ReporteItem({ r, open, onToggle, seleccionado, onSeleccionar }) {
 
 export default function Indicadores({ auth, stats, categorias = [] }) {
     const [tab, setTab] = useState('reportes');
-    const [filtros, setFiltros] = useState({ estado: '', area: '', fecha_inicio: '', fecha_fin: '', nombre_responsable: '' });
+    const [filtros, setFiltros] = useState({ estado: '', area: '', categoria: '', fecha_inicio: '', fecha_fin: '', nombre_responsable: '' });
     const [fechaInd, setFechaInd] = useState({ inicio: '', fin: '' });
     const [pageOp, setPageOp] = useState(1);
     const [perPage, setPerPage] = useState(25);
@@ -227,19 +339,47 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
     const [openReporteId, setOpenReporteId] = useState(null);
     const [seleccionados, setSeleccionados] = useState([]);
     const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+    const [showBulkEstadoModal, setShowBulkEstadoModal] = useState(false);
+    const [bulkEstado, setBulkEstado] = useState('pendiente');
+
+    const cambiarEstadoMasivo = () => {
+        if (seleccionados.length === 0) return;
+
+        router.patch(route('admin.indicadores.estado-masivo'), {
+            ids: seleccionados,
+            estado: bulkEstado,
+        }, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setShowBulkEstadoModal(false);
+                setSeleccionados([]);
+            }
+        });
+    };
 
     const toggleSeleccion = (id) => setSeleccionados(prev =>
         prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     );
-    const toggleTodos = (ids) => setSeleccionados(prev =>
-        prev.length === ids.length ? [] : ids
-    );
+
+    const toggleTodos = (paginaIds) => {
+        setSeleccionados(prev => {
+            const todosPaginaSeleccionados = paginaIds.every(id => prev.includes(id));
+            if (todosPaginaSeleccionados) {
+                return prev.filter(id => !paginaIds.includes(id));
+            } else {
+                return Array.from(new Set([...prev, ...paginaIds]));
+            }
+        });
+    };
+
     const eliminarSeleccionados = () => {
         router.delete(route('admin.indicadores.destroy-multiple'), {
             data: { ids: seleccionados },
             onSuccess: () => { setSeleccionados([]); setConfirmBulkDelete(false); },
         });
     };
+
     const exportarSeleccionados = () => {
         const params = new URLSearchParams();
         seleccionados.forEach(id => params.append('ids[]', id));
@@ -279,14 +419,29 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
     };
 
     const exportarPdf = () => {
-        window.location.href = `/admin/indicadores/export-pdf?${new URLSearchParams(filtros).toString()}`;
+        const params = new URLSearchParams();
+
+        if (seleccionados.length > 0) {
+            seleccionados.forEach(id => params.append('ids[]', id));
+        } else {
+            Object.entries(filtros).forEach(([key, val]) => {
+                if (val) params.append(key, val);
+            });
+        }
+
+        window.location.href = `/admin/indicadores/export-pdf?${params.toString()}`;
     };
 
     React.useEffect(() => { setPageOp(1); }, [filtros, perPage]);
 
+    const responsablesUnicos = React.useMemo(() => (
+        Array.from(new Set((stats.registros || []).map(r => r.nombre_responsable).filter(Boolean))).sort()
+    ), [stats.registros]);
+
     const registrosFiltrados = (stats.registros || []).filter(r => {
         if (filtros.estado && r.estado !== filtros.estado) return false;
         if (filtros.area   && (r.area_responsable || r.area) !== filtros.area) return false;
+        if (filtros.categoria && r.categoria !== filtros.categoria) return false;
         if (filtros.fecha_inicio && r.created_at.slice(0, 10) < filtros.fecha_inicio) return false;
         if (filtros.fecha_fin   && r.created_at.slice(0, 10) > filtros.fecha_fin)   return false;
         if (filtros.nombre_responsable && !(r.nombre_responsable || '').toLowerCase().includes(filtros.nombre_responsable.toLowerCase())) return false;
@@ -324,9 +479,7 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
         : (stats.hoy || 0);
 
     return (
-        <AuthenticatedLayout
-            user={auth.user}
-        >
+        <AuthenticatedLayout user={auth.user}>
             <Head title="Indicadores de Mejora" />
 
             <div className="flex items-center gap-2 mb-4">
@@ -566,6 +719,7 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                             nombre_responsable: { label: 'Responsable', fmt: v => v },
                             estado:             { label: 'Estado',      fmt: v => v.replace('_', ' ') },
                             area:               { label: 'Área',        fmt: v => v },
+                            categoria:          { label: 'Categoría',   fmt: v => v },
                             fecha_inicio:       { label: 'Desde',       fmt: v => fmtFecha(v) },
                             fecha_fin:          { label: 'Hasta',       fmt: v => fmtFecha(v) },
                         };
@@ -584,12 +738,10 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                                 <div className="flex flex-wrap items-end gap-2">
                                     <div className="flex flex-col gap-1 flex-1 min-w-[160px]">
                                         <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] px-0.5">Responsable</label>
-                                        <input
-                                            type="text"
-                                            className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs"
-                                            placeholder="Buscar por nombre..."
+                                        <ResponsableFiltro
+                                            opciones={responsablesUnicos}
                                             value={filtros.nombre_responsable}
-                                            onChange={e => setFiltros(p => ({ ...p, nombre_responsable: e.target.value }))}
+                                            onChange={v => setFiltros(p => ({ ...p, nombre_responsable: v }))}
                                         />
                                     </div>
                                     <div className="flex flex-col gap-1">
@@ -619,6 +771,14 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                                         </select>
                                     </div>
                                     <div className="flex flex-col gap-1">
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] px-0.5">Categoría</label>
+                                        <CategoriaFiltro
+                                            categorias={categorias}
+                                            value={filtros.categoria}
+                                            onChange={v => setFiltros(p => ({ ...p, categoria: v }))}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
                                         <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] px-0.5">Desde</label>
                                         <input
                                             type="date"
@@ -640,13 +800,17 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                                         <span className="text-[10px] font-black text-[#00a3e0] bg-[#e6f6fd] px-2.5 py-1.5 rounded-lg whitespace-nowrap">{registrosFiltrados.length} resultados</span>
                                         {seleccionados.length > 0 && (
                                             <>
+                                                <button onClick={() => setShowBulkEstadoModal(true)}
+                                                    className="premium-button-primary !py-1.5 !px-3 text-xs !bg-sky-600 hover:!bg-sky-700 shadow-none whitespace-nowrap">
+                                                    Estado ({seleccionados.length})
+                                                </button>
                                                 <button onClick={exportarSeleccionados}
                                                     className="premium-button-primary !py-1.5 !px-3 text-xs !bg-green-600 hover:!bg-green-700 shadow-none whitespace-nowrap">
-                                                    Exportar {seleccionados.length}
+                                                    Exportar ({seleccionados.length})
                                                 </button>
                                                 <button onClick={() => setConfirmBulkDelete(true)}
                                                     className="premium-button-primary !py-1.5 !px-3 text-xs !bg-red-500 hover:!bg-red-600 shadow-none whitespace-nowrap">
-                                                    Eliminar {seleccionados.length}
+                                                    Eliminar ({seleccionados.length})
                                                 </button>
                                             </>
                                         )}
@@ -690,7 +854,7 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                                             </span>
                                         ))}
                                         <button
-                                            onClick={() => setFiltros({ estado: '', area: '', fecha_inicio: '', fecha_fin: '', nombre_responsable: '' })}
+                                            onClick={() => setFiltros({ estado: '', area: '', categoria: '', fecha_inicio: '', fecha_fin: '', nombre_responsable: '' })}
                                             className="text-[9px] font-black text-[#94a3b8] hover:text-[#dc2626] ml-1 transition-colors"
                                         >
                                             Limpiar todo
@@ -706,7 +870,7 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                             <div className="p-20 text-center flex flex-col items-center gap-2">
                                 <div className="text-4xl">🔍</div>
                                 <div className="text-gray-400 font-bold italic text-sm">Sin resultados.</div>
-                                <button onClick={() => setFiltros({ estado: '', area: '', fecha_inicio: '', fecha_fin: '', nombre_responsable: '' })} className="text-[#00a3e0] font-black text-[10px] uppercase hover:underline mt-2">Limpiar filtros</button>
+                                <button onClick={() => setFiltros({ estado: '', area: '', categoria: '', fecha_inicio: '', fecha_fin: '', nombre_responsable: '' })} className="text-[#00a3e0] font-black text-[10px] uppercase hover:underline mt-2">Limpiar filtros</button>
                             </div>
                         ) : (
                             <>
@@ -776,7 +940,6 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                         </div>
 
                         <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
-                            {/* Agregar nueva */}
                             <form onSubmit={guardarCat} className="flex gap-2">
                                 <input
                                     type="text"
@@ -796,7 +959,6 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                             </form>
                             {catForm.errors.nombre && <p className="text-red-500 text-xs -mt-2">{catForm.errors.nombre}</p>}
 
-                            {/* Lista de categorías */}
                             <div className="divide-y divide-[#f1f5f9]">
                                 {categorias.map(cat => (
                                     <div key={cat.id} className="py-2.5">
@@ -851,6 +1013,8 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                 </div>,
                 document.body
             )}
+
+            {/* Modal Confirmación Eliminación Masiva */}
             {confirmBulkDelete && (
                 <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full space-y-4">
@@ -863,7 +1027,43 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                     </div>
                 </div>
             )}
+
+            {/* Modal Cambio Estado Masivo */}
+            {showBulkEstadoModal && (
+                <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full space-y-4">
+                        <h3 className="font-bold text-[#0f172a] text-sm">Cambiar estado a {seleccionados.length} registros</h3>
+                        
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Nuevo Estado</label>
+                            <select
+                                className="premium-input !py-2 border-[#f1f5f9] text-xs"
+                                value={bulkEstado}
+                                onChange={e => setBulkEstado(e.target.value)}
+                            >
+                                <option value="pendiente">Pendiente</option>
+                                <option value="confirmado">Confirmado</option>
+                                <option value="no_confirmado">No Confirmado</option>
+                            </select>
+                        </div>
+
+                        <div className="flex gap-2 justify-end pt-2">
+                            <button 
+                                onClick={() => setShowBulkEstadoModal(false)} 
+                                className="px-4 py-2 text-xs font-bold text-[#64748b] hover:bg-[#f1f5f9] rounded-lg transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                onClick={cambiarEstadoMasivo} 
+                                className="px-4 py-2 text-xs font-bold bg-[#00a2e1] text-white rounded-lg hover:bg-[#0084b9] transition-colors"
+                            >
+                                Aplicar Cambio
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }
-

@@ -109,69 +109,94 @@ class OportunidadMejoraController extends Controller
         $count = OportunidadMejora::whereIn('id', $request->ids)->delete();
         return redirect()->back()->with('success', "{$count} registros eliminados.");
     }
-
+//////////////////////tambien se modifico///////////////////////////////////////////
     public function export(Request $request)
-    {
-        $query = OportunidadMejora::query();
+{
+    $query = OportunidadMejora::query();
 
-        if ($request->ids)                $query->whereIn('id', $request->ids);
-        if ($request->area)               $query->where('area_responsable', $request->area);
-        if ($request->estado)             $query->where('estado', $request->estado);
-        if ($request->nombre_responsable) $query->where('nombre_responsable', 'like', '%' . $request->nombre_responsable . '%');
-        if ($request->fecha_inicio)       $query->whereDate('created_at', '>=', $request->fecha_inicio);
-        if ($request->fecha_fin)          $query->whereDate('created_at', '<=', $request->fecha_fin);
+    if ($request->ids)                 $query->whereIn('id', $request->ids);
+    if ($request->area)                $query->where('area_responsable', $request->area);
+    if ($request->estado)              $query->where('estado', $request->estado);
+    if ($request->nombre_responsable)  $query->where('nombre_responsable', 'like', '%' . $request->nombre_responsable . '%');
+    if ($request->fecha_inicio)        $query->whereDate('created_at', '>=', $request->fecha_inicio);
+    if ($request->fecha_fin)           $query->whereDate('created_at', '<=', $request->fecha_fin);
 
-        $registros = $query->orderBy('created_at', 'desc')->get();
+    $registros = $query->orderBy('created_at', 'desc')->get();
 
-        $data = [['ID', 'Nº Orden', 'Reportado Por', 'Responsable', 'Documento Reportante', 'Área', 'Categoría', 'Descripción', 'Estado', 'Observación Admin', 'Revisado Por', 'Fecha Revisión', 'Fecha Caso', 'Fecha Registro']];
+    $data = [['ID', 'Nº Orden', 'Reportado Por', 'Responsable', 'Documento Reportante', 'Área', 'Categoría', 'Descripción', 'Estado', 'Observación Admin', 'Revisado Por', 'Fecha Revisión', 'Fecha Caso', 'Fecha Registro']];
 
-        foreach ($registros as $r) {
-            $data[] = [
-                $r->id,
-                $r->no_orden ?? '',
-                $r->nombre_empleado,
-                $r->nombre_responsable ?? '',
-                $r->documento_empleado ?? '',
-                $r->area,
-                $r->categoria,
-                $r->descripcion,
-                ucfirst(str_replace('_', ' ', $r->estado)),
-                $r->observacion_admin ?? '',
-                $r->revisado_por ?? '',
-                $r->fecha_revision ? \Carbon\Carbon::parse($r->fecha_revision)->format('d/m/Y H:i') : '',
-                $r->fecha_caso ? \Carbon\Carbon::parse($r->fecha_caso)->format('d/m/Y') : '',
-                $r->created_at->format('d/m/Y H:i'),
-            ];
-        }
+    // Función auxiliar para eliminar caracteres de control XML no válidos
+    $clean = function ($text) {
+        if (is_null($text)) return '';
+        // Elimina caracteres ASCII de control excepto saltos de línea y tabulaciones (\x09, \x0A, \x0D)
+        return preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', (string)$text);
+    };
 
-        return \App\Helpers\SimpleXLSXGen::fromArray($data)->downloadAs('oportunidades_mejora.xlsx');
-    }
-
-    // Exportar PDF
-    public function exportPdf(Request $request)
-    {
-        $query = OportunidadMejora::query();
-
-        if ($request->area)         $query->where('area_responsable', $request->area);
-        if ($request->estado)       $query->where('estado', $request->estado);
-        if ($request->nombre_responsable) $query->where('nombre_responsable', 'like', '%' . $request->nombre_responsable . '%');
-        if ($request->fecha_inicio) $query->whereDate('created_at', '>=', $request->fecha_inicio);
-        if ($request->fecha_fin)    $query->whereDate('created_at', '<=', $request->fecha_fin);
-
-        $registros = $query->orderBy('created_at', 'desc')->get();
-
-        $filtros = [
-            'fecha_inicio' => $request->fecha_inicio,
-            'fecha_fin'    => $request->fecha_fin,
-            'area'         => $request->area,
-            'estado'       => $request->estado,
+    foreach ($registros as $r) {
+        $data[] = [
+            (int) $r->id,
+            $clean($r->no_orden),
+            $clean($r->nombre_empleado),
+            $clean($r->nombre_responsable),
+            $clean($r->documento_empleado),
+            $clean($r->area),
+            $clean($r->categoria),
+            $clean($r->descripcion),
+            $clean(ucfirst(str_replace('_', ' ', $r->estado ?? ''))),
+            $clean($r->observacion_admin),
+            $clean($r->revisado_por),
+            $r->fecha_revision ? \Carbon\Carbon::parse($r->fecha_revision)->format('d/m/Y H:i') : '',
+            $r->fecha_caso ? \Carbon\Carbon::parse($r->fecha_caso)->format('d/m/Y') : '',
+            $r->created_at ? \Carbon\Carbon::parse($r->created_at)->format('d/m/Y H:i') : '',
         ];
-
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.oportunidades', compact('registros', 'filtros'))
-            ->setPaper('letter', 'landscape');
-
-        return $pdf->download('oportunidades_mejora_' . now()->format('Ymd_His') . '.pdf');
     }
+
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    return \App\Helpers\SimpleXLSXGen::fromArray($data)->downloadAs('oportunidades_mejora.xlsx');
+}
+////////////////////////// se movio esto en el controller Exportar PDF///////////////////////////////////////////////////
+public function exportPdf(Request $request)
+{
+    ini_set('memory_limit', '512M');
+    set_time_limit(300);
+
+    $query = OportunidadMejora::query();
+
+    // Prioridad: si vienen IDs seleccionados desde el frontend, se filtran solo esos
+    if ($request->has('ids') && is_array($request->ids) && count($request->ids) > 0) {
+        $query->whereIn('id', $request->ids);
+    } else {
+        // De lo contrario, se aplican los filtros tradicionales
+        if ($request->filled('area'))               $query->where('area_responsable', $request->area);
+        if ($request->filled('estado'))             $query->where('estado', $request->estado);
+        if ($request->filled('nombre_responsable')) $query->where('nombre_responsable', 'like', '%' . $request->nombre_responsable . '%');
+        if ($request->filled('fecha_inicio'))       $query->whereDate('created_at', '>=', $request->fecha_inicio);
+        if ($request->filled('fecha_fin'))          $query->whereDate('created_at', '<=', $request->fecha_fin);
+    }
+
+    $registros = $query->orderBy('created_at', 'desc')->get();
+
+    $filtros = [
+        'fecha_inicio' => $request->fecha_inicio,
+        'fecha_fin'    => $request->fecha_fin,
+        'area'         => $request->area,
+        'estado'       => $request->estado,
+    ];
+
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.oportunidades', compact('registros', 'filtros'))
+        ->setPaper('letter', 'landscape')
+        ->setOption([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled'      => true,
+        ]);
+
+    return $pdf->download('oportunidades_mejora_' . now()->format('Ymd_His') . '.pdf');
+}
+///////////////////////////////////////////////////////////////////////
+
 
     private function buildStats(): array
     {
@@ -187,4 +212,26 @@ class OportunidadMejoraController extends Controller
             'areas'         => Colaborador::select('area')->distinct()->pluck('area'),
         ];
     }
+
+// ✅ SOLUCIÓN EN OportunidadMejoraController.php
+public function actualizarEstadoMasivo(Request $request)
+{
+    $request->validate([
+        'ids' => 'required|array',
+        'ids.*' => 'exists:oportunidades_mejora,id', // O la tabla donde se guardan las oportunidades
+        'estado' => 'required|in:pendiente,confirmado,no_confirmado',
+    ]);
+
+    OportunidadMejora::whereIn('id', $request->ids)->update([
+        'estado' => $request->estado,
+        'revisado_por' => auth()->user()->name,
+        'fecha_revision' => now(),
+    ]);
+
+    return redirect()->back()->with('success', 'Estados actualizados correctamente.');
+}
+
+
+
+
 }

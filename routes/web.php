@@ -12,6 +12,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\AnuncioController;
 use App\Http\Controllers\TurnoController;
+
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -78,6 +79,8 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     // Módulo Indicadores de Mejora (admin)
     Route::get('/admin/indicadores', [OportunidadMejoraController::class, 'adminIndex'])->name('admin.indicadores');
     Route::delete('/admin/indicadores', [OportunidadMejoraController::class, 'destroyMultiple'])->name('admin.indicadores.destroy-multiple');
+    Route::patch('/admin/indicadores/estado-masivo', [OportunidadMejoraController::class, 'actualizarEstadoMasivo'])
+    ->name('admin.indicadores.estado-masivo');//nueva ruta para actualizar estado masivo
     Route::get('/admin/indicadores/stats', [OportunidadMejoraController::class, 'stats'])->name('admin.indicadores.stats');
     Route::patch('/admin/indicadores/{oportunidad}', [OportunidadMejoraController::class, 'updateEstado'])->name('admin.indicadores.estado');
     Route::get('/admin/indicadores/export', [OportunidadMejoraController::class, 'export'])->name('admin.indicadores.export');
@@ -124,6 +127,10 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/admin/exportar-reporte', [RegistroController::class, 'export'])->name('admin.registros.export');
+
+
+
+
 });
 
 require __DIR__ . '/auth.php';

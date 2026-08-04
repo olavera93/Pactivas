@@ -14,57 +14,41 @@
     /* ── Header ── */
     .header {
         background: #ffffff;
-        padding: 16px 30px;
+        padding: 14px 30px;
         display: table;
         width: 100%;
         border-bottom: 2px solid #e2e8f0;
     }
-    .header-left  { display: table-cell; vertical-align: middle; }
+    .header-left  { display: table-cell; vertical-align: middle; width: 50%; }
     .header-right { display: table-cell; vertical-align: middle; text-align: right; white-space: nowrap; padding-left: 20px; }
 
     .header-org   { font-size: 7px; letter-spacing: 2px; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; }
-    .header-title { font-size: 16px; font-weight: bold; color: #0f172a; line-height: 1.2; }
+    .header-title { font-size: 15px; font-weight: bold; color: #0f172a; line-height: 1.2; }
 
-    .header-label { font-size: 6.5px; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; }
-    .header-value { font-size: 11px; font-weight: bold; color: #0f172a; margin-top: 2px; }
+    .header-label { font-size: 6px; letter-spacing: 1.2px; text-transform: uppercase; color: #94a3b8; }
+    .header-value { font-size: 10px; font-weight: bold; color: #0f172a; margin-top: 1px; }
 
-    .header-meta { display: table; border-collapse: separate; border-spacing: 0; }
+    .header-meta { display: table; border-collapse: separate; border-spacing: 0; margin-left: auto; }
     .header-meta-cell {
         display: table-cell;
         vertical-align: middle;
-        text-align: right;
-        padding-left: 18px;
+        text-align: center;
+        padding: 0 12px;
         border-left: 1px solid #e2e8f0;
     }
     .header-meta-cell:first-child { border-left: none; padding-left: 0; }
 
-    /* ── KPI Strip ── */
-    .kpi-strip {
-        border-bottom: 1px solid #e2e8f0;
-    }
-    .kpi-strip table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .kpi-item {
-        width: 25%;
-        padding: 12px 30px;
+    /* ── KPI mini (compactos, junto al título) ── */
+    .kpi-mini {
+        display: table-cell;
         vertical-align: middle;
-        border-right: 1px solid #e2e8f0;
+        text-align: center;
+        padding: 0 10px;
+        border-left: 1px solid #e2e8f0;
     }
-    .kpi-item:last-child { border-right: none; }
-    .kpi-inner { display: table; width: 100%; }
-    .kpi-text  { display: table-cell; vertical-align: middle; }
-    .kpi-accent { display: table-cell; vertical-align: middle; text-align: right; }
-    .kpi-dot {
-        display: inline-block;
-        width: 8px; height: 8px;
-        border-radius: 50%;
-        vertical-align: middle;
-    }
-
-    .kpi-num   { font-size: 22px; font-weight: bold; line-height: 1; }
-    .kpi-label { font-size: 7px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-top: 3px; }
+    .kpi-mini:first-child { border-left: none; }
+    .kpi-mini-num   { font-size: 15px; font-weight: bold; line-height: 1; }
+    .kpi-mini-label { font-size: 5.5px; text-transform: uppercase; letter-spacing: 0.6px; color: #94a3b8; margin-top: 2px; }
 
     /* ── Period bar ── */
     .period-bar {
@@ -111,10 +95,10 @@
     }
 
     /* ── Table ── */
-    table.main { width: 100%; border-collapse: collapse; font-size: 8.5px; }
+    table.main { width: 100%; border-collapse: collapse; font-size: 8.5px; table-layout: fixed; }
     table.main thead tr { background: #f8fafc; border-bottom: 2px solid #e2e8f0; }
     table.main thead th {
-        padding: 7px 10px;
+        padding: 7px 8px;
         color: #64748b;
         text-align: left;
         font-size: 6.5px;
@@ -125,7 +109,7 @@
     table.main tbody tr:nth-child(even) { background: #f8fafc; }
     table.main tbody tr:nth-child(odd)  { background: #ffffff; }
     table.main tbody td {
-        padding: 6px 10px;
+        padding: 6px 8px;
         border-bottom: 1px solid #f1f5f9;
         vertical-align: middle;
         color: #334155;
@@ -210,6 +194,22 @@
     </div>
     <div class="header-right">
         <div class="header-meta">
+            <div class="kpi-mini">
+                <div class="kpi-mini-num" style="color:#0ea5e9;">{{ $total }}</div>
+                <div class="kpi-mini-label">Total</div>
+            </div>
+            <div class="kpi-mini">
+                <div class="kpi-mini-num" style="color:#d97706;">{{ $pendientes }}</div>
+                <div class="kpi-mini-label">Pendientes</div>
+            </div>
+            <div class="kpi-mini">
+                <div class="kpi-mini-num" style="color:#16a34a;">{{ $confirmados }}</div>
+                <div class="kpi-mini-label">Confirmados</div>
+            </div>
+            <div class="kpi-mini">
+                <div class="kpi-mini-num" style="color:#dc2626;">{{ $noConfirmados }}</div>
+                <div class="kpi-mini-label">No conf.</div>
+            </div>
             <div class="header-meta-cell">
                 <div class="header-label">Generado</div>
                 <div class="header-value">{{ \Carbon\Carbon::now()->format('d/m/Y') }}</div>
@@ -224,90 +224,37 @@
     </div>
 </div>
 
-<!-- KPI Strip -->
-<div class="kpi-strip">
-    <table>
-        <tr>
-            <td class="kpi-item" style="border-top: 3px solid #0ea5e9;">
-                <div class="kpi-inner">
-                    <div class="kpi-text">
-                        <div class="kpi-num" style="color:#0ea5e9;">{{ $total }}</div>
-                        <div class="kpi-label">Total registros</div>
-                    </div>
-                </div>
-            </td>
-            <td class="kpi-item" style="border-top: 3px solid #f59e0b;">
-                <div class="kpi-inner">
-                    <div class="kpi-text">
-                        <div class="kpi-num" style="color:#d97706;">{{ $pendientes }}</div>
-                        <div class="kpi-label">Pendientes</div>
-                    </div>
-                </div>
-            </td>
-            <td class="kpi-item" style="border-top: 3px solid #22c55e;">
-                <div class="kpi-inner">
-                    <div class="kpi-text">
-                        <div class="kpi-num" style="color:#16a34a;">{{ $confirmados }}</div>
-                        <div class="kpi-label">Confirmados</div>
-                    </div>
-                </div>
-            </td>
-            <td class="kpi-item" style="border-top: 3px solid #ef4444;">
-                <div class="kpi-inner">
-                    <div class="kpi-text">
-                        <div class="kpi-num" style="color:#dc2626;">{{ $noConfirmados }}</div>
-                        <div class="kpi-label">No confirmados</div>
-                    </div>
-                </div>
-            </td>
-        </tr>
-    </table>
-</div>
-
 <!-- Period / filters bar -->
-<div class="period-bar">
-    <div class="period-left">
-        @if($filtros['area'])
-            <span class="period-tag">Área</span>
-            <span class="period-val">{{ $filtros['area'] }}</span>
-            <span class="period-sep">|</span>
-        @endif
-        @if($filtros['estado'])
-            <span class="period-tag">Estado</span>
-            <span class="period-val">{{ ucfirst(str_replace('_', ' ', $filtros['estado'])) }}</span>
-            <span class="period-sep">|</span>
-        @endif
-        @if(!$filtros['area'] && !$filtros['estado'])
-            <span class="period-tag">Filtros</span>
-            <span class="period-val">Sin filtros aplicados &mdash; todos los registros</span>
-        @endif
-    </div>
-    <div class="period-right">
-        <span class="period-tag">Registros en este reporte</span>
-        <span class="period-val">{{ $total }}</span>
-    </div>
-</div>
+
 
 <!-- Table -->
 <div class="content">
     <div class="sec-label">Detalle de oportunidades</div>
 
     <table class="main">
+       <colgroup>
+    <col width="7%" style="width: 7%;">
+    <col width="18%" style="width: 18%;">
+    <col width="11%" style="width: 11%;">
+    <col width="47%" style="width: 47%;">
+    <col width="6%" style="width: 6%;">
+    <col width="11%" style="width: 11%;">
+</colgroup>
         <thead>
             <tr>
-                <th style="width:22px;">#</th>
-                <th style="width:90px; white-space:nowrap;">N&ordm; Orden</th>
-                <th style="width:140px;">Responsable</th>
-                <th style="width:78px;">&Aacute;rea</th>
-                <th style="width:110px;">Descripci&oacute;n</th>
-                <th style="width:28px; text-align:center;">Est.</th>
-                <th style="width:66px;">Fecha Caso</th>
+
+      <th width="7%" style="white-space:nowrap;">N&ordm; Orden</th>
+<th width="18%">Responsable</th>
+<th width="11%">&Aacute;rea</th>
+<th width="47%">Descripci&oacute;n</th>
+<th width="6%" style="text-align:center;">Est.</th>
+<th width="11%">Fecha Caso</th>
             </tr>
         </thead>
         <tbody>
             @forelse($registros as $r)
             <tr>
-                <td style="color:#cbd5e1; font-size:8px;">{{ $r->id }}</td>
+
                 <td style="font-family: monospace; color:#475569; font-size:8px; white-space:nowrap;">{{ $r->no_orden ?? '&mdash;' }}</td>
                 <td style="color:#475569;">{{ $r->nombre_responsable ?? '&mdash;' }}</td>
                 <td style="color:#475569;">{{ $r->area_responsable ?? $r->area }}</td>
