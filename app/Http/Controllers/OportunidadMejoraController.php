@@ -64,12 +64,15 @@ class OportunidadMejoraController extends Controller
     {
         $query = OportunidadMejora::query();
 
-        if ($request->area)         $query->where('area_responsable', $request->area);
-        if ($request->categoria)    $query->where('categoria', $request->categoria);
-        if ($request->estado)       $query->where('estado', $request->estado);
+        if ($request->no_orden)           $query->where('no_orden', 'like', '%' . $request->no_orden . '%');
+        if ($request->nombre_responsable) $query->where('nombre_responsable', 'like', '%' . $request->nombre_responsable . '%');
+        if ($request->nombre_empleado)    $query->where('nombre_empleado', 'like', '%' . $request->nombre_empleado . '%');
+        if ($request->area)               $query->where('area_responsable', $request->area);
+        if ($request->categoria)          $query->where('categoria', $request->categoria);
+        if ($request->estado)             $query->where('estado', $request->estado);
 
-        if ($request->fecha_inicio) $query->whereDate('created_at', '>=', $request->fecha_inicio);
-        if ($request->fecha_fin)    $query->whereDate('created_at', '<=', $request->fecha_fin);
+        if ($request->fecha_inicio)       $query->whereDate('created_at', '>=', $request->fecha_inicio);
+        if ($request->fecha_fin)          $query->whereDate('created_at', '<=', $request->fecha_fin);
 
         $registros = $query->orderBy('created_at', 'desc')->get();
 
@@ -115,9 +118,12 @@ class OportunidadMejoraController extends Controller
     $query = OportunidadMejora::query();
 
     if ($request->ids)                 $query->whereIn('id', $request->ids);
+    if ($request->no_orden)            $query->where('no_orden', 'like', '%' . $request->no_orden . '%');
     if ($request->area)                $query->where('area_responsable', $request->area);
+    if ($request->categoria)           $query->where('categoria', $request->categoria);
     if ($request->estado)              $query->where('estado', $request->estado);
     if ($request->nombre_responsable)  $query->where('nombre_responsable', 'like', '%' . $request->nombre_responsable . '%');
+    if ($request->nombre_empleado)     $query->where('nombre_empleado', 'like', '%' . $request->nombre_empleado . '%');
     if ($request->fecha_inicio)        $query->whereDate('created_at', '>=', $request->fecha_inicio);
     if ($request->fecha_fin)           $query->whereDate('created_at', '<=', $request->fecha_fin);
 
@@ -170,9 +176,12 @@ public function exportPdf(Request $request)
         $query->whereIn('id', $request->ids);
     } else {
         // De lo contrario, se aplican los filtros tradicionales
+        if ($request->filled('no_orden'))           $query->where('no_orden', 'like', '%' . $request->no_orden . '%');
         if ($request->filled('area'))               $query->where('area_responsable', $request->area);
+        if ($request->filled('categoria'))          $query->where('categoria', $request->categoria);
         if ($request->filled('estado'))             $query->where('estado', $request->estado);
         if ($request->filled('nombre_responsable')) $query->where('nombre_responsable', 'like', '%' . $request->nombre_responsable . '%');
+        if ($request->filled('nombre_empleado'))    $query->where('nombre_empleado', 'like', '%' . $request->nombre_empleado . '%');
         if ($request->filled('fecha_inicio'))       $query->whereDate('created_at', '>=', $request->fecha_inicio);
         if ($request->filled('fecha_fin'))          $query->whereDate('created_at', '<=', $request->fecha_fin);
     }
@@ -180,10 +189,14 @@ public function exportPdf(Request $request)
     $registros = $query->orderBy('created_at', 'desc')->get();
 
     $filtros = [
-        'fecha_inicio' => $request->fecha_inicio,
-        'fecha_fin'    => $request->fecha_fin,
-        'area'         => $request->area,
-        'estado'       => $request->estado,
+        'no_orden'           => $request->no_orden,
+        'nombre_responsable' => $request->nombre_responsable,
+        'nombre_empleado'    => $request->nombre_empleado,
+        'fecha_inicio'       => $request->fecha_inicio,
+        'fecha_fin'          => $request->fecha_fin,
+        'area'               => $request->area,
+        'categoria'          => $request->categoria,
+        'estado'             => $request->estado,
     ];
 
     $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.oportunidades', compact('registros', 'filtros'))

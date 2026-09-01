@@ -24,6 +24,8 @@ class ColaboradorController extends Controller
             'apellidos' => 'required|string|max:255',
             'area' => 'required|string|max:255',
             'documento' => 'nullable|string|max:20',
+            'activo' => 'boolean',
+            'fecha_cumpleanios' => 'nullable|date',
         ]);
 
         Colaborador::create($validated);
@@ -38,6 +40,7 @@ class ColaboradorController extends Controller
             'area'      => 'required|string|max:255',
             'documento' => 'nullable|string|max:20',
             'activo'    => 'boolean',
+            'fecha_cumpleanios' => 'nullable|date',
         ]);
 
         $colaborador->update($validated);

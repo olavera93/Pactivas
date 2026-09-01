@@ -171,7 +171,7 @@ function CategoriaFiltro({ categorias, value, onChange }) {
     );
 }
 
-function ResponsableFiltro({ opciones, value, onChange }) {
+function AutocompleteFiltro({ opciones, value, onChange, placeholder, inputRef }) {
     const [open, setOpen] = useState(false);
     const ref = React.useRef(null);
 
@@ -190,10 +190,11 @@ function ResponsableFiltro({ opciones, value, onChange }) {
     return (
         <div className="relative" ref={ref}>
             <input
+                ref={inputRef}
                 type="text"
                 className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs w-full"
-                placeholder="Buscar por nombre..."
-                value={value}
+                placeholder={placeholder || "Buscar..."}
+                value={value || ''}
                 onFocus={() => setOpen(true)}
                 onChange={e => { onChange(e.target.value); setOpen(true); }}
             />
@@ -216,7 +217,7 @@ function ResponsableFiltro({ opciones, value, onChange }) {
     );
 }
 
-function ReporteItem({ r, open, onToggle, seleccionado, onSeleccionar }) {
+function ReporteItem({ r, open, onToggle, seleccionado, onSeleccionar, onFiltrarOrden, onFiltrarResponsable, onFiltrarReportador }) {
     const cfg = ESTADO_CONFIG[r.estado] || ESTADO_CONFIG.pendiente;
     const form = useForm({ estado: r.estado, observacion_admin: r.observacion_admin || '' });
 
@@ -241,13 +242,46 @@ function ReporteItem({ r, open, onToggle, seleccionado, onSeleccionar }) {
                     </svg>
                 </td>
                 <td className="py-2 px-3">
-                    <span className="text-[10px] font-bold text-[#0369a1] bg-[#e0f2fe] px-2 py-0.5 rounded font-mono whitespace-nowrap">{r.no_orden || '—'}</span>
+                    <span
+                        onClick={e => {
+                            if (r.no_orden) {
+                                e.stopPropagation();
+                                onFiltrarOrden && onFiltrarOrden(r.no_orden);
+                            }
+                        }}
+                        className={`text-[10px] font-bold text-[#0369a1] bg-[#e0f2fe] px-2 py-0.5 rounded font-mono whitespace-nowrap ${r.no_orden ? 'hover:bg-[#bae6fd] cursor-pointer' : ''}`}
+                        title={r.no_orden ? "Haga clic para filtrar por este Nº de orden" : undefined}
+                    >
+                        {r.no_orden || '—'}
+                    </span>
                 </td>
                 <td className="py-2 px-3">
-                    <div className="text-[12px] font-semibold text-gray-900 leading-tight">{r.nombre_responsable || '—'}</div>
+                    <div
+                        onClick={e => {
+                            if (r.nombre_responsable) {
+                                e.stopPropagation();
+                                onFiltrarResponsable && onFiltrarResponsable(r.nombre_responsable);
+                            }
+                        }}
+                        className={`text-[12px] font-semibold text-gray-900 leading-tight ${r.nombre_responsable ? 'hover:text-[#00a3e0] cursor-pointer' : ''}`}
+                        title={r.nombre_responsable ? "Haga clic para filtrar por este responsable" : undefined}
+                    >
+                        {r.nombre_responsable || '—'}
+                    </div>
                 </td>
                 <td className="py-2 px-3">
-                    <div className="text-[11px] text-[#64748b]">{r.nombre_empleado}</div>
+                    <div
+                        onClick={e => {
+                            if (r.nombre_empleado) {
+                                e.stopPropagation();
+                                onFiltrarReportador && onFiltrarReportador(r.nombre_empleado);
+                            }
+                        }}
+                        className={`text-[11px] text-[#64748b] ${r.nombre_empleado ? 'hover:text-[#00a3e0] font-medium cursor-pointer' : ''}`}
+                        title={r.nombre_empleado ? "Haga clic para filtrar por este reportador" : undefined}
+                    >
+                        {r.nombre_empleado}
+                    </div>
                 </td>
                 <td className="py-2 px-3">
                     <span className="text-[11px] text-gray-600">{r.area_responsable || r.area}</span>
@@ -330,8 +364,17 @@ function ReporteItem({ r, open, onToggle, seleccionado, onSeleccionar }) {
 
 export default function Indicadores({ auth, stats, categorias = [] }) {
     const [tab, setTab] = useState('reportes');
-    const [filtros, setFiltros] = useState({ estado: '', area: '', categoria: '', fecha_inicio: '', fecha_fin: '', nombre_responsable: '' });
-    const [fechaInd, setFechaInd] = useState({ inicio: '', fin: '' });
+    const [filtros, setFiltros] = useState({
+        no_orden: '',
+        nombre_responsable: '',
+        nombre_empleado: '',
+        estado: '',
+        area: '',
+        categoria: '',
+        fecha_inicio: '',
+        fecha_fin: ''
+    });
+    const [fechaInd, setFechaInd] = useState({ inicio: '', fin: '', area: '', buscar: '' });
     const [pageOp, setPageOp] = useState(1);
     const [perPage, setPerPage] = useState(25);
     const [showCatModal, setShowCatModal] = useState(false);
@@ -341,6 +384,23 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
     const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
     const [showBulkEstadoModal, setShowBulkEstadoModal] = useState(false);
     const [bulkEstado, setBulkEstado] = useState('pendiente');
+
+    const ordenInputRef = React.useRef(null);
+    const responsableInputRef = React.useRef(null);
+    const reportadorInputRef = React.useRef(null);
+
+    const limpiarFiltros = () => {
+        setFiltros({
+            no_orden: '',
+            nombre_responsable: '',
+            nombre_empleado: '',
+            estado: '',
+            area: '',
+            categoria: '',
+            fecha_inicio: '',
+            fecha_fin: ''
+        });
+    };
 
     const cambiarEstadoMasivo = () => {
         if (seleccionados.length === 0) return;
@@ -438,13 +498,19 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
         Array.from(new Set((stats.registros || []).map(r => r.nombre_responsable).filter(Boolean))).sort()
     ), [stats.registros]);
 
+    const reportadoresUnicos = React.useMemo(() => (
+        Array.from(new Set((stats.registros || []).map(r => r.nombre_empleado).filter(Boolean))).sort()
+    ), [stats.registros]);
+
     const registrosFiltrados = (stats.registros || []).filter(r => {
+        if (filtros.no_orden && !(r.no_orden || '').toLowerCase().includes(filtros.no_orden.toLowerCase())) return false;
         if (filtros.estado && r.estado !== filtros.estado) return false;
         if (filtros.area   && (r.area_responsable || r.area) !== filtros.area) return false;
         if (filtros.categoria && r.categoria !== filtros.categoria) return false;
         if (filtros.fecha_inicio && r.created_at.slice(0, 10) < filtros.fecha_inicio) return false;
         if (filtros.fecha_fin   && r.created_at.slice(0, 10) > filtros.fecha_fin)   return false;
         if (filtros.nombre_responsable && !(r.nombre_responsable || '').toLowerCase().includes(filtros.nombre_responsable.toLowerCase())) return false;
+        if (filtros.nombre_empleado && !(r.nombre_empleado || '').toLowerCase().includes(filtros.nombre_empleado.toLowerCase())) return false;
         return true;
     });
 
@@ -454,7 +520,8 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
         if (fechaInd.area   && (r.area_responsable || r.area) !== fechaInd.area) return false;
         if (fechaInd.buscar) {
             const q = fechaInd.buscar.toLowerCase();
-            if (!(r.nombre_responsable || '').toLowerCase().includes(q) &&
+            if (!(r.no_orden          || '').toLowerCase().includes(q) &&
+                !(r.nombre_responsable || '').toLowerCase().includes(q) &&
                 !(r.nombre_empleado   || '').toLowerCase().includes(q) &&
                 !(r.area              || '').toLowerCase().includes(q) &&
                 !(r.categoria         || '').toLowerCase().includes(q)) return false;
@@ -536,7 +603,7 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                             <input
                                 type="text"
                                 className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs"
-                                placeholder="Responsable, área, categoría..."
+                                placeholder="Nº Orden, responsable, reportado por, área, categoría..."
                                 value={fechaInd.buscar || ''}
                                 onChange={e => setFechaInd(p => ({ ...p, buscar: e.target.value }))}
                             />
@@ -716,7 +783,9 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                         ];
 
                         const FILTRO_LABELS = {
+                            no_orden:           { label: 'Nº Orden',    fmt: v => v },
                             nombre_responsable: { label: 'Responsable', fmt: v => v },
+                            nombre_empleado:    { label: 'Reportador',  fmt: v => v },
                             estado:             { label: 'Estado',      fmt: v => v.replace('_', ' ') },
                             area:               { label: 'Área',        fmt: v => v },
                             categoria:          { label: 'Categoría',   fmt: v => v },
@@ -726,7 +795,7 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
 
                         const chips = Object.entries(filtros)
                             .filter(([, v]) => v)
-                            .map(([k, v]) => ({ key: k, text: `${FILTRO_LABELS[k].label}: ${FILTRO_LABELS[k].fmt(v)}` }));
+                            .map(([k, v]) => ({ key: k, text: `${FILTRO_LABELS[k]?.label || k}: ${FILTRO_LABELS[k]?.fmt ? FILTRO_LABELS[k].fmt(v) : v}` }));
 
                         const rangoActivo = rangos.find(r =>
                             r.fi === filtros.fecha_inicio && r.ff === filtros.fecha_fin
@@ -736,12 +805,35 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                             <div className="premium-card p-3 space-y-2">
                                 {/* Fila de inputs */}
                                 <div className="flex flex-wrap items-end gap-2">
-                                    <div className="flex flex-col gap-1 flex-1 min-w-[160px]">
+                                    <div className="flex flex-col gap-1 w-28">
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] px-0.5">Nº Orden</label>
+                                        <input
+                                            ref={ordenInputRef}
+                                            type="text"
+                                            className="premium-input !py-1.5 shadow-none border-[#f1f5f9] text-xs w-full"
+                                            placeholder="Nº Orden..."
+                                            value={filtros.no_orden}
+                                            onChange={e => setFiltros(p => ({ ...p, no_orden: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1 flex-1 min-w-[140px]">
                                         <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] px-0.5">Responsable</label>
-                                        <ResponsableFiltro
+                                        <AutocompleteFiltro
+                                            inputRef={responsableInputRef}
+                                            placeholder="Buscar por responsable..."
                                             opciones={responsablesUnicos}
                                             value={filtros.nombre_responsable}
                                             onChange={v => setFiltros(p => ({ ...p, nombre_responsable: v }))}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1 flex-1 min-w-[140px]">
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] px-0.5">Reportado por</label>
+                                        <AutocompleteFiltro
+                                            inputRef={reportadorInputRef}
+                                            placeholder="Buscar por reportador..."
+                                            opciones={reportadoresUnicos}
+                                            value={filtros.nombre_empleado}
+                                            onChange={v => setFiltros(p => ({ ...p, nombre_empleado: v }))}
                                         />
                                     </div>
                                     <div className="flex flex-col gap-1">
@@ -854,7 +946,7 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                                             </span>
                                         ))}
                                         <button
-                                            onClick={() => setFiltros({ estado: '', area: '', categoria: '', fecha_inicio: '', fecha_fin: '', nombre_responsable: '' })}
+                                            onClick={limpiarFiltros}
                                             className="text-[9px] font-black text-[#94a3b8] hover:text-[#dc2626] ml-1 transition-colors"
                                         >
                                             Limpiar todo
@@ -870,7 +962,7 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                             <div className="p-20 text-center flex flex-col items-center gap-2">
                                 <div className="text-4xl">🔍</div>
                                 <div className="text-gray-400 font-bold italic text-sm">Sin resultados.</div>
-                                <button onClick={() => setFiltros({ estado: '', area: '', categoria: '', fecha_inicio: '', fecha_fin: '', nombre_responsable: '' })} className="text-[#00a3e0] font-black text-[10px] uppercase hover:underline mt-2">Limpiar filtros</button>
+                                <button onClick={limpiarFiltros} className="text-[#00a3e0] font-black text-[10px] uppercase hover:underline mt-2">Limpiar filtros</button>
                             </div>
                         ) : (
                             <>
@@ -898,9 +990,36 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                                                     />
                                                 </th>
                                                 <th className="py-2 px-2 w-6" />
-                                                <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest whitespace-nowrap">Nº Orden</th>
-                                                <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">Responsable</th>
-                                                <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">Reportado por</th>
+                                                <th
+                                                    onClick={() => ordenInputRef.current?.focus()}
+                                                    className="py-2 px-3 text-[9px] font-black text-[#94a3b8] hover:text-[#00a3e0] uppercase tracking-widest whitespace-nowrap cursor-pointer transition-colors group"
+                                                    title="Haga clic para buscar por Nº Orden"
+                                                >
+                                                    <div className="flex items-center gap-1">
+                                                        <span>Nº Orden</span>
+                                                        <span className="text-[8px] opacity-0 group-hover:opacity-100 transition-opacity">🔍</span>
+                                                    </div>
+                                                </th>
+                                                <th
+                                                    onClick={() => responsableInputRef.current?.focus()}
+                                                    className="py-2 px-3 text-[9px] font-black text-[#94a3b8] hover:text-[#00a3e0] uppercase tracking-widest cursor-pointer transition-colors group"
+                                                    title="Haga clic para buscar por responsable"
+                                                >
+                                                    <div className="flex items-center gap-1">
+                                                        <span>Responsable</span>
+                                                        <span className="text-[8px] opacity-0 group-hover:opacity-100 transition-opacity">🔍</span>
+                                                    </div>
+                                                </th>
+                                                <th
+                                                    onClick={() => reportadorInputRef.current?.focus()}
+                                                    className="py-2 px-3 text-[9px] font-black text-[#94a3b8] hover:text-[#00a3e0] uppercase tracking-widest cursor-pointer transition-colors group"
+                                                    title="Haga clic para buscar por reportador"
+                                                >
+                                                    <div className="flex items-center gap-1">
+                                                        <span>Reportado por</span>
+                                                        <span className="text-[8px] opacity-0 group-hover:opacity-100 transition-opacity">🔍</span>
+                                                    </div>
+                                                </th>
                                                 <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">Área</th>
                                                 <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest hidden md:table-cell">Categoría</th>
                                                 <th className="py-2 px-3 text-[9px] font-black text-[#94a3b8] uppercase tracking-widest">Fecha caso</th>
@@ -915,6 +1034,9 @@ export default function Indicadores({ auth, stats, categorias = [] }) {
                                                     onToggle={() => setOpenReporteId(openReporteId === r.id ? null : r.id)}
                                                     seleccionado={seleccionados.includes(r.id)}
                                                     onSeleccionar={() => toggleSeleccion(r.id)}
+                                                    onFiltrarOrden={v => setFiltros(p => ({ ...p, no_orden: v }))}
+                                                    onFiltrarResponsable={v => setFiltros(p => ({ ...p, nombre_responsable: v }))}
+                                                    onFiltrarReportador={v => setFiltros(p => ({ ...p, nombre_empleado: v }))}
                                                 />
                                             ))}
                                         </tbody>

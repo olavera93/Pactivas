@@ -10,7 +10,13 @@ export default function Colaboradores({ auth, colaboradores, departamentos, impo
     const [isEditingArea, setIsEditingArea] = useState(false);
 
     const { data, setData, post, put, delete: destroy, processing, reset, errors } = useForm({
-        id: null, documento: '', nombres: '', apellidos: '', area: '', activo: true,
+        id: null, 
+        documento: '', 
+        nombres: '', 
+        apellidos: '', 
+        area: '', 
+        fecha_cumpleanios: '', 
+        activo: true,
     });
 
     const areaForm = useForm({ id: null, nombre: '' });
@@ -56,9 +62,20 @@ export default function Colaboradores({ auth, colaboradores, departamentos, impo
     };
 
     const edit = (c) => {
-        setData({ id: c.id, documento: c.documento || '', nombres: c.nombres, apellidos: c.apellidos, area: c.area, activo: c.activo !== false });
-        setIsEditing(true);
-    };
+    // Garantizamos que si fecha_cumpleanios es null/undefined, retorne un string vacío ''
+    const fechaFormatted = c.fecha_cumpleanios ? String(c.fecha_cumpleanios).substring(0, 10) : '';
+
+    setData({ 
+        id: c.id, 
+        documento: c.documento || '', 
+        nombres: c.nombres || '', 
+        apellidos: c.apellidos || '', 
+        area: c.area || '', 
+        fecha_cumpleanios: fechaFormatted,
+        activo: c.activo !== false 
+    });
+    setIsEditing(true);
+};
 
     const handleAreaSubmit = (e) => {
         e.preventDefault();
@@ -129,6 +146,15 @@ export default function Colaboradores({ auth, colaboradores, departamentos, impo
                                         {departamentos.map(d => <option key={d.id} value={d.nombre}>{d.nombre}</option>)}
                                     </select>
                                 </div>
+                               <div className="flex flex-col gap-1">
+    <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Fecha Cumpleaños</label>
+    <input 
+        type="date" 
+        className="px-3 py-1.5 border border-[#e2e8f0] rounded-lg text-xs outline-none bg-[#f8fafc] focus:border-[#0284c7] transition-colors"
+        value={data.fecha_cumpleanios || ''} 
+        onChange={e => setData('fecha_cumpleanios', e.target.value)} 
+    />
+</div>
                                 {isEditing && (
                                     <div className="flex flex-col gap-1">
                                         <label className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Estado</label>
@@ -201,6 +227,7 @@ export default function Colaboradores({ auth, colaboradores, departamentos, impo
                                             <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest">Documento</th>
                                             <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest">Colaborador</th>
                                             <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest">Área</th>
+                                            <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest">Cumpleaños</th>
                                             <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest text-center">Estado</th>
                                             <th className="py-2 px-4 text-[8px] font-black text-[#94a3b8] uppercase tracking-widest text-right">Acciones</th>
                                         </tr>
@@ -211,6 +238,7 @@ export default function Colaboradores({ auth, colaboradores, departamentos, impo
                                                 <td className="py-2 px-4"><span className="text-[10px] font-mono text-[#94a3b8]">{c.documento || '—'}</span></td>
                                                 <td className="py-2 px-4"><div className="text-xs font-semibold text-[#1e293b]">{c.nombres} {c.apellidos}</div></td>
                                                 <td className="py-2 px-4"><span className="text-[10px] px-2 py-0.5 rounded-md bg-[#e0f2fe] text-[#0369a1] font-bold">{c.area}</span></td>
+                                                <td className="py-2 px-4"><span className="text-[10px] text-[#64748b]">{c.fecha_cumpleanios ? c.fecha_cumpleanios.substring(0, 10) : '—'}</span></td>
                                                 <td className="py-2 px-4 text-center">
                                                     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${c.activo !== false ? 'bg-green-50 text-green-700' : 'bg-[#f1f5f9] text-[#94a3b8]'}`}>
                                                         {c.activo !== false ? 'Activo' : 'Inactivo'}
@@ -225,7 +253,7 @@ export default function Colaboradores({ auth, colaboradores, departamentos, impo
                                                 </td>
                                             </tr>
                                         )) : (
-                                            <tr><td colSpan="5" className="py-16 text-center text-[#94a3b8] text-sm italic">No hay coincidencias.</td></tr>
+                                            <tr><td colSpan="6" className="py-16 text-center text-[#94a3b8] text-sm italic">No hay coincidencias.</td></tr>
                                         )}
                                     </tbody>
                                 </table>

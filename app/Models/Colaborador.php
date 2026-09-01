@@ -9,8 +9,17 @@ class Colaborador extends Model
 {
     use SerializesLocalDates;
 
-    //
-    protected $fillable = ['nombres', 'apellidos', 'area', 'documento', 'activo'];
+    protected $fillable = [
+        'nombres', 
+        'apellidos', 
+        'area', 
+        'documento', 
+        'activo', 
+        'fecha_cumpleanios'
+    ];
 
-    protected $casts = ['activo' => 'boolean'];
+    protected $casts = [
+        'activo' => 'boolean',
+        'fecha_cumpleanios' => 'date',
+    ];
 }
